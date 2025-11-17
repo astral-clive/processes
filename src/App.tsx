@@ -1,0 +1,443 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import Sidebar from '@/components/sidebar/Sidebar'
+import FlowWorkspace from '@/components/process/FlowWorkspace'
+import {
+  createProcess,
+  deleteProcess,
+  fetchCategories,
+  fetchProcess,
+  persistCategories,
+  persistProcess,
+  resetProcess
+} from '@/lib/api'
+import type {
+  CategoriesDocument,
+  ProcessDocument,
+  ProcessIdentifier,
+  ProcessUpdater
+} from '@/types'
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || 'item'
+
+const uniqueSlug = (base: string, existing: string[]) => {
+  let candidate = base
+  let counter = 1
+  while (existing.includes(candidate)) {
+    candidate = `${base}-${counter}`
+    counter += 1
+  }
+  return candidate
+}
+
+function App() {
+  const [categoriesDoc, setCategoriesDoc] = useState<CategoriesDocument>({ categories: [] })
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [categoriesError, setCategoriesError] = useState<string | null>(null)
+  const [selectedProcess, setSelectedProcess] = useState<ProcessIdentifier | null>(null)
+  const [processDoc, setProcessDoc] = useState<ProcessDocument | null>(null)
+  const [processLoading, setProcessLoading] = useState(false)
+  const [processError, setProcessError] = useState<string | null>(null)
+  const [editMode, setEditMode] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+
+  useEffect(() => {
+    const load = async () => {
+      setCategoriesLoading(true)
+      setCategoriesError(null)
+      try {
+        const data = await fetchCategories()
+        setCategoriesDoc(data)
+        if (!selectedProcess && data.categories.length > 0) {
+          const firstCategory = data.categories[0]
+          const firstProcess = firstCategory.processes[0]
+          if (firstProcess) {
+            setSelectedProcess({ categoryId: firstCategory.id, processId: firstProcess.id })
+          }
+        }
+      } catch (error) {
+        console.error(error)
+        setCategoriesError('Unable to load categories.')
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+
+    load()
+  }, [])
+
+  const availableProcesses = useMemo(() => {
+    const available = categoriesDoc.categories.flatMap((category) =>
+      category.processes.map((process) => ({
+        categoryId: category.id,
+        processId: process.id
+      }))
+    )
+    return available
+  }, [categoriesDoc])
+
+  useEffect(() => {
+    if (!availableProcesses.length) {
+      setSelectedProcess(null)
+      setProcessDoc(null)
+      return
+    }
+
+    if (
+      selectedProcess &&
+      availableProcesses.some(
+        (item) =>
+          item.categoryId === selectedProcess.categoryId &&
+          item.processId === selectedProcess.processId
+      )
+    ) {
+      return
+    }
+
+    setSelectedProcess(availableProcesses[0])
+  }, [availableProcesses, selectedProcess])
+
+  useEffect(() => {
+    if (!selectedProcess) {
+      setProcessDoc(null)
+      return
+    }
+
+    const loadProcess = async () => {
+      setProcessLoading(true)
+      setProcessError(null)
+      setDirty(false)
+      setSaveState('idle')
+
+      try {
+        const doc = await fetchProcess(selectedProcess.categoryId, selectedProcess.processId)
+        setProcessDoc(doc)
+      } catch (error) {
+        console.error(error)
+        setProcessError('Unable to load this process.')
+      } finally {
+        setProcessLoading(false)
+      }
+    }
+
+    loadProcess()
+  }, [selectedProcess])
+
+  useEffect(() => {
+    if (!dirty || !processDoc || !selectedProcess) {
+      return
+    }
+
+    const timer = window.setTimeout(async () => {
+      setSaveState('saving')
+      try {
+        const updated = await persistProcess(processDoc)
+        setProcessDoc(updated)
+        setDirty(false)
+        setSaveState('saved')
+        setLastSavedAt(Date.now())
+      } catch (error) {
+        console.error(error)
+        setSaveState('error')
+      }
+    }, 900)
+
+    return () => window.clearTimeout(timer)
+  }, [dirty, processDoc, selectedProcess])
+
+  const persistCategoriesChange = useCallback(
+    async (updater: (prev: CategoriesDocument) => CategoriesDocument) => {
+      let nextDoc: CategoriesDocument | null = null
+      setCategoriesDoc((prev) => {
+        nextDoc = updater(prev)
+        return nextDoc
+      })
+      if (!nextDoc) return
+
+      try {
+        await persistCategories(nextDoc)
+      } catch (error) {
+        console.error(error)
+        setCategoriesError('Unable to save categories.')
+        throw error
+      }
+    },
+    []
+  )
+
+  const handleProcessChange = useCallback(
+    (updater: ProcessUpdater) => {
+      setProcessDoc((prev) => {
+        if (!prev) return prev
+        const next = updater(prev)
+        setDirty(true)
+        return next
+      })
+    },
+    []
+  )
+
+  const handleAddCategory = useCallback(async () => {
+    const name = window.prompt('New category name?')?.trim()
+    if (!name) return
+
+    const id = uniqueSlug(slugify(name), categoriesDoc.categories.map((category) => category.id))
+
+    await persistCategoriesChange((prev) => ({
+      categories: [...prev.categories, { id, name, processes: [] }]
+    }))
+  }, [categoriesDoc, persistCategoriesChange])
+
+  const handleRenameCategory = useCallback(
+    async (categoryId: string) => {
+      const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+      if (!category) return
+      const name = window.prompt('Rename category', category.name)?.trim()
+      if (!name || name === category.name) return
+
+      await persistCategoriesChange((prev) => ({
+        categories: prev.categories.map((cat) =>
+          cat.id === categoryId ? { ...cat, name } : cat
+        )
+      }))
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
+  const handleDeleteCategory = useCallback(
+    async (categoryId: string) => {
+      const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+      if (!category) return
+      const confirmed = window.confirm(
+        `Delete category "${category.name}" and all of its processes?`
+      )
+      if (!confirmed) return
+
+      setProcessError(null)
+      try {
+        await Promise.all(
+          category.processes.map((process) =>
+            deleteProcess(categoryId, process.id).catch((error) => console.error(error))
+          )
+        )
+
+        await persistCategoriesChange((prev) => ({
+          categories: prev.categories.filter((cat) => cat.id !== categoryId)
+        }))
+
+        setSelectedProcess((prev) =>
+          prev && prev.categoryId === categoryId ? null : prev
+        )
+      } catch (error) {
+        console.error(error)
+        setProcessError('Unable to delete that category.')
+      }
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
+  const handleAddProcess = useCallback(
+    async (categoryId: string) => {
+      const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+      if (!category) return
+
+      const name = window.prompt('Process name?')?.trim()
+      if (!name) return
+
+      const processId = uniqueSlug(
+        slugify(name),
+        category.processes.map((process) => process.id)
+      )
+
+      setProcessError(null)
+      try {
+        const doc = await createProcess({
+          categoryId,
+          categoryName: category.name,
+          processId,
+          processName: name
+        })
+
+        await persistCategoriesChange((prev) => ({
+          categories: prev.categories.map((cat) =>
+            cat.id === categoryId
+              ? {
+                  ...cat,
+                  processes: [...cat.processes, { id: processId, name }]
+                }
+              : cat
+          )
+        }))
+
+        setSelectedProcess({ categoryId, processId })
+        setProcessDoc(doc)
+        setDirty(false)
+        setSaveState('idle')
+      } catch (error) {
+        console.error(error)
+        setProcessError('Unable to create that process.')
+      }
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
+  const handleRenameProcess = useCallback(
+    async (categoryId: string, processId: string) => {
+      const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+      const process = category?.processes.find((proc) => proc.id === processId)
+      if (!category || !process) return
+
+      const name = window.prompt('Rename process', process.name)?.trim()
+      if (!name || name === process.name) return
+
+      await persistCategoriesChange((prev) => ({
+        categories: prev.categories.map((cat) =>
+          cat.id === categoryId
+            ? {
+                ...cat,
+                processes: cat.processes.map((proc) =>
+                  proc.id === processId ? { ...proc, name } : proc
+                )
+              }
+            : cat
+        )
+      }))
+
+      setProcessDoc((prev) =>
+        prev &&
+        prev.meta.categoryId === categoryId &&
+        prev.meta.processId === processId
+          ? {
+              ...prev,
+              meta: {
+                ...prev.meta,
+                title: `${category.name} ${name} Flow`
+              }
+            }
+          : prev
+      )
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
+  const handleDeleteProcess = useCallback(
+    async (categoryId: string, processId: string) => {
+      const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+      const process = category?.processes.find((proc) => proc.id === processId)
+      if (!category || !process) return
+
+      const confirmed = window.confirm(`Delete process "${process.name}"?`)
+      if (!confirmed) return
+
+      setProcessError(null)
+      try {
+        await deleteProcess(categoryId, processId)
+
+        await persistCategoriesChange((prev) => ({
+          categories: prev.categories.map((cat) =>
+            cat.id === categoryId
+              ? {
+                  ...cat,
+                  processes: cat.processes.filter((proc) => proc.id !== processId)
+                }
+              : cat
+          )
+        }))
+
+        if (
+          selectedProcess?.categoryId === categoryId &&
+          selectedProcess.processId === processId
+        ) {
+          setSelectedProcess(null)
+          setProcessDoc(null)
+        }
+      } catch (error) {
+        console.error(error)
+        setProcessError('Unable to delete that process.')
+      }
+    },
+    [categoriesDoc, persistCategoriesChange, selectedProcess]
+  )
+
+  const handleResetProcess = useCallback(async () => {
+    if (!selectedProcess) return
+    setProcessError(null)
+    try {
+      const doc = await resetProcess(selectedProcess.categoryId, selectedProcess.processId)
+      setProcessDoc(doc)
+      setDirty(false)
+      setSaveState('idle')
+      setLastSavedAt(Date.now())
+    } catch (error) {
+      console.error(error)
+      setProcessError('Unable to reset this process.')
+      throw error
+    }
+  }, [selectedProcess])
+
+  return (
+    <div className="flex h-screen bg-ink-950 text-white">
+      <Sidebar
+        categories={categoriesDoc.categories}
+        selectedProcess={selectedProcess}
+        editMode={editMode}
+        loading={categoriesLoading}
+        onToggleEditMode={() => setEditMode((prev) => !prev)}
+        onSelectProcess={setSelectedProcess}
+        onAddCategory={handleAddCategory}
+        onRenameCategory={handleRenameCategory}
+        onDeleteCategory={handleDeleteCategory}
+        onAddProcess={handleAddProcess}
+        onRenameProcess={handleRenameProcess}
+        onDeleteProcess={handleDeleteProcess}
+      />
+
+      <main className="flex-1 relative flex flex-col bg-gradient-to-b from-ink-900 to-ink-950">
+        {categoriesError && (
+          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-200 px-4 py-2 text-sm">
+            {categoriesError}
+          </div>
+        )}
+        {processError && (
+          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-200 px-4 py-2 text-sm">
+            {processError}
+          </div>
+        )}
+        <div className="flex-1">
+          {processLoading && (
+            <div className="flex h-full items-center justify-center text-slate-400">
+              Loading process...
+            </div>
+          )}
+          {!processLoading && processDoc && (
+            <FlowWorkspace
+              doc={processDoc}
+              onDocChange={handleProcessChange}
+              autoSaveState={saveState}
+              lastSavedAt={lastSavedAt}
+              onReset={handleResetProcess}
+            />
+          )}
+          {!processLoading && !processDoc && (
+            <div className="flex h-full flex-col items-center justify-center text-center text-slate-400 space-y-3">
+              <p className="text-xl font-medium text-white">Choose a process to get started</p>
+              <p className="text-sm">
+                Use the sidebar to create categories and processes, then build beautiful flowcharts.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default App
+
+

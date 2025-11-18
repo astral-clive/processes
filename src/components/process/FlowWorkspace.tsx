@@ -25,7 +25,8 @@ import {
   Eye,
   Maximize2,
   Loader2,
-  Check
+  Check,
+  Upload
 } from 'lucide-react'
 
 import type {
@@ -348,6 +349,19 @@ const FlowWorkspace = ({
     }
   }
 
+  const handleExport = useCallback(() => {
+    const dataStr = JSON.stringify(doc, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${doc.meta.categoryId}-${doc.meta.processId}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [doc])
+
   return (
     <div className="flex h-full">
       <div className="flex-1 relative bg-slate-950">
@@ -360,6 +374,14 @@ const FlowWorkspace = ({
               title={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
             >
               <SidebarIcon size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="icon-button"
+              title="Export process"
+            >
+              <Upload size={18} />
             </button>
             <h2 className="text-sm font-medium tracking-widest uppercase text-slate-400">
               {doc.meta.categoryId} · {doc.meta.processId}

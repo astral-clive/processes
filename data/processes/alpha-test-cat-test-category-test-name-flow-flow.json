@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "categoryId": "alpha",
+    "processId": "test-cat-test-category-test-name-flow-flow",
+    "title": "Alpha TEst CAt Test Category Test Name Flow Flow Flow",
+    "description": "Auto-generated process for Alpha · TEst CAt Test Category Test Name Flow Flow",
+    "updatedAt": "2025-11-18T22:53:06.447Z"
+  },
+  "nodes": [
+    {
+      "id": "alpha-test-cat-test-category-test-name-flow-flow-step-1",
+      "type": "processNode",
+      "position": {
+        "x": 280,
+        "y": -20
+      },
+      "data": {
+        "title": "New step",
+        "description": "Describe this step so teammates know what needs to happen."
+      }
+    },
+    {
+      "id": "alpha-test-cat-test-category-test-name-flow-flow-step-2",
+      "type": "processNode",
+      "position": {
+        "x": 480,
+        "y": 120
+      },
+      "data": {
+        "title": "New step",
+        "description": "Describe this step so teammates know what needs to happen."
+      }
+    },
+    {
+      "id": "alpha-test-cat-test-category-test-name-flow-flow-step-3",
+      "type": "processNode",
+      "position": {
+        "x": 80,
+        "y": 120
+      },
+      "data": {
+        "title": "New step",
+        "description": "Describe this step so teammates know what needs to happen."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "alpha-test-cat-test-category-test-name-flow-flow-edge-1",
+      "type": "processEdge",
+      "source": "alpha-test-cat-test-category-test-name-flow-flow-step-1",
+      "sourceHandle": "right",
+      "target": "alpha-test-cat-test-category-test-name-flow-flow-step-2",
+      "targetHandle": "top",
+      "data": {
+        "label": "Yes",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "id": "alpha-test-cat-test-category-test-name-flow-flow-edge-2",
+      "type": "processEdge",
+      "source": "alpha-test-cat-test-category-test-name-flow-flow-step-1",
+      "sourceHandle": "left",
+      "target": "alpha-test-cat-test-category-test-name-flow-flow-step-3",
+      "targetHandle": "top",
+      "data": {
+        "label": "No",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    }
+  ]
+}

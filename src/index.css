@@ -29,8 +29,10 @@ body {
   min-height: 100px;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  background: rgba(59, 130, 246, 0.15);
-  border: 2px solid rgba(59, 130, 246, 0.4);
+  --node-bg: rgba(59, 130, 246, 0.15);
+  --node-border: rgba(59, 130, 246, 0.4);
+  background: var(--node-bg) !important;
+  border: 2px solid var(--node-border) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   color: #f8fafc;
   display: flex;
@@ -40,9 +42,7 @@ body {
 }
 
 .process-node--selected {
-  border-color: rgba(16, 185, 129, 0.8);
-  background: rgba(16, 185, 129, 0.15);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important;
 }
 
 .process-node-handle {

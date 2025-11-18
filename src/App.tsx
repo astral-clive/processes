@@ -75,6 +75,7 @@ const normalizeNodeData = (data: LegacyNodeData): ProcessNodeData => {
   const description = descriptions.find((item) => item && item.length > 0) || 'Add context for this step.'
 
   return {
+    ...data, // Preserve all existing properties like color
     title,
     description
   }
@@ -481,15 +482,28 @@ function App() {
           category.processes.map((process) => process.id)
         )
 
-        // Create the new process with imported data using createProcess
-        const saved = await createProcess({
+        // First create the process (this creates a default process on the server)
+        await createProcess({
           categoryId,
           categoryName: category.name,
           processId,
-          processName,
+          processName
+        })
+
+        // Then immediately update it with the imported data
+        const newProcessDoc: ProcessDocument = {
+          meta: {
+            categoryId,
+            processId,
+            title: processName,
+            description: importedData.meta.description,
+            updatedAt: new Date().toISOString()
+          },
           nodes: importedData.nodes,
           edges: importedData.edges
-        })
+        }
+
+        const saved = await persistProcess(newProcessDoc)
 
         // Update categories to include the new process
         await persistCategoriesChange((prev) => ({

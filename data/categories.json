@@ -1,14 +1,3 @@
 {
-  "categories": [
-    {
-      "id": "alpha",
-      "name": "Alpha",
-      "processes": [
-        {
-          "id": "test-cat-test-category-test-name-flow-flow",
-          "name": "TEst CAt Test Category Test Name Flow Flow"
-        }
-      ]
-    }
-  ]
+  "categories": []
 }

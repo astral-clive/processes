@@ -74,6 +74,20 @@ const defaultEdgeData: ProcessEdgeData = {
   branchStyle: 'default'
 }
 
+// Pastel color palette for nodes
+const NODE_COLORS = [
+  { name: 'Blue', hex: '#3b82f6' },
+  { name: 'Pink', hex: '#fca5a5' },
+  { name: 'Purple', hex: '#c4b5fd' },
+  { name: 'Green', hex: '#86efac' },
+  { name: 'Yellow', hex: '#fde047' },
+  { name: 'Orange', hex: '#fdba74' },
+  { name: 'Teal', hex: '#5eead4' },
+  { name: 'Lavender', hex: '#e9d5ff' }
+]
+
+const DEFAULT_NODE_COLOR = '#3b82f6'
+
 const FlowWorkspace = ({
   doc,
   onDocChange,
@@ -128,7 +142,7 @@ const FlowWorkspace = ({
           setShowSavedToast(false)
         }, 2000)
       }
-    }, 3000) // Wait 3 seconds after last change
+    }, 1000) // Wait 1 second after last change
     
     return () => clearTimeout(timer)
   }, [parentHasUnsavedChanges, onSave])
@@ -232,7 +246,8 @@ const FlowWorkspace = ({
       },
       data: {
         title: 'New step',
-        description: 'Describe this step so teammates know what needs to happen.'
+        description: 'Describe this step so teammates know what needs to happen.',
+        color: DEFAULT_NODE_COLOR
       }
     }
 
@@ -327,15 +342,17 @@ const FlowWorkspace = ({
     [onDocChange, setEdges]
   )
 
-  const selectedNode =
+  const selectedNode = useMemo(() => 
     selection?.type === 'node'
       ? nodes.find((node) => node.id === selection.id)
       : undefined
+  , [selection, nodes])
 
-  const selectedEdge =
+  const selectedEdge = useMemo(() =>
     selection?.type === 'edge'
       ? edges.find((edge) => edge.id === selection.id)
       : undefined
+  , [selection, edges])
 
   const handleReset = async () => {
     setResetting(true)
@@ -538,6 +555,8 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
       onUpdateNode(node.id, (data) => ({ ...data, ...changes }))
     }
 
+    const currentColor = node.data.color || DEFAULT_NODE_COLOR
+
     return (
       <aside className="w-80 border-l border-white/10 bg-ink-900/80 text-white p-6 space-y-4">
         <div>
@@ -564,6 +583,25 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
             placeholder="Summarize what happens in this step."
           />
         </label>
+        <div className="form-label">
+          Color
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            {NODE_COLORS.map((color) => (
+              <button
+                key={color.hex}
+                type="button"
+                onClick={() => updateNodeData({ color: color.hex })}
+                className={`w-10 h-10 rounded-lg transition-all hover:scale-110 ${
+                  currentColor === color.hex
+                    ? 'ring-2 ring-white ring-offset-2 ring-offset-ink-900'
+                    : 'hover:ring-1 hover:ring-white/50'
+                }`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
+              />
+            ))}
+          </div>
+        </div>
       </aside>
     )
   }

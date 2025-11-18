@@ -1,3 +1,14 @@
 {
-  "categories": []
+  "categories": [
+    {
+      "id": "alpha",
+      "name": "Alpha",
+      "processes": [
+        {
+          "id": "onboarding-to-team",
+          "name": "Onboarding to Team"
+        }
+      ]
+    }
+  ]
 }

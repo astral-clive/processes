@@ -1,7 +1,6 @@
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  MarkerType,
   getBezierPath
 } from 'reactflow'
 import type { EdgeProps } from 'reactflow'
@@ -18,25 +17,13 @@ const branchBadgeStyles: Record<
 }
 
 const ProcessEdge = (props: EdgeProps<ProcessEdgeData>) => {
-  const { id, data } = props
+  const { id, data, markerEnd, markerStart } = props
   const [edgePath, labelX, labelY] = getBezierPath(props)
 
   const color = data?.color ?? '#94a3b8'
   const lineStyle = data?.lineStyle ?? 'solid'
   const dashArray =
     lineStyle === 'dashed' ? '8 8' : lineStyle === 'dotted' ? '2 10' : undefined
-
-  const markerEnd =
-    data?.arrow === 'arrow'
-      ? {
-          type: MarkerType.ArrowClosed,
-          color,
-          width: 24,
-          height: 24
-        }
-      : data?.arrow === 'diamond'
-        ? `url(#diamond-${id})`
-        : undefined
 
   const animatedStyle =
     props.animated
@@ -49,30 +36,13 @@ const ProcessEdge = (props: EdgeProps<ProcessEdgeData>) => {
 
   return (
     <>
-      {data?.arrow === 'diamond' && (
-        <defs>
-          <marker
-            id={`diamond-${id}`}
-            markerWidth="14"
-            markerHeight="14"
-            refX="0"
-            refY="0"
-            orient="auto"
-            markerUnits="strokeWidth"
-          >
-            <polygon
-              points="0,-4 4,0 0,4 -4,0"
-              fill={color}
-            />
-          </marker>
-        </defs>
-      )}
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
+        markerStart={markerStart}
         style={{
           stroke: color,
-          strokeWidth: 2.4,
+          strokeWidth: 3,
           strokeDasharray: dashArray,
           ...animatedStyle
         }}

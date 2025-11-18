@@ -25,38 +25,75 @@ body {
 }
 
 .process-node {
-  min-width: 200px;
-  max-width: 280px;
-  padding: 1.4rem;
-  border-radius: 1.5rem;
-  box-shadow: 0 30px 60px -35px rgba(15, 23, 42, 0.8);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 200px;
+  min-height: 100px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #f8fafc;
   display: flex;
+  justify-content: space-between;
   flex-direction: column;
-  gap: 0.35rem;
+  transition: all 0.2s ease;
 }
 
-.process-node--circle {
-  border-radius: 999px;
-  min-height: 180px;
-  min-width: 180px;
-  align-items: center;
-  text-align: center;
-  justify-content: center;
+.process-node--selected {
+  border-color: rgba(16, 185, 129, 0.8);
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
 }
 
-.process-node--diamond {
-  padding: 2.8rem 2rem;
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  text-align: center;
+.process-node-handle {
+  width: 12px;
+  height: 12px;
+  background: rgba(59, 130, 246, 0.8);
+  border: 2px solid #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.process-node-handle:hover {
+  width: 14px;
+  height: 14px;
+  background: rgba(16, 185, 129, 0.9);
+}
+
+/* Hide connection handles when not in edit mode */
+.react-flow__node:not(.selectable) .process-node-handle {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .process-node__inner {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.process-node__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.5rem;
+}
+
+.process-node__description {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(248, 250, 252, 0.8);
+  flex: 1;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .control-chip {
   @apply text-xs uppercase tracking-wide px-3 py-1.5 rounded-full border border-white/20 hover:border-white transition disabled:opacity-40 disabled:cursor-not-allowed;
+}
+
+.icon-button {
+  @apply p-2.5 rounded-full border border-white/20 hover:border-white/60 transition text-white/80 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center;
 }
 
 .form-label {
@@ -88,4 +125,23 @@ body {
   }
 }
 
+/* Hide React Flow attribution */
+.react-flow__attribution {
+  display: none;
+}
 
+/* Toast animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

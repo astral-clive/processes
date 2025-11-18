@@ -1,18 +1,8 @@
 import type { Edge, Node } from 'reactflow'
 
-export type NodeShape = 'rectangle' | 'circle' | 'diamond'
-
-export type ProcessNodeField = {
-  key: string
-  value: string
-}
-
 export type ProcessNodeData = {
-  label: string
-  shape: NodeShape
-  color: string
-  textColor: string
-  fields: ProcessNodeField[]
+  title: string
+  description: string
 }
 
 export type ProcessNode = Node<ProcessNodeData>

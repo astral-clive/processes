@@ -1,49 +1,42 @@
-import type { NodeProps } from 'reactflow'
+import { Handle, Position, type NodeProps } from 'reactflow'
 import type { ProcessNodeData } from '@/types'
 
 const ProcessNode = ({ data, selected }: NodeProps<ProcessNodeData>) => {
-  const nodeClass =
-    data.shape === 'circle'
-      ? 'process-node process-node--circle'
-      : data.shape === 'diamond'
-        ? 'process-node process-node--diamond'
-        : 'process-node'
-
   return (
-    <div
-      className={`${nodeClass} ${selected ? 'ring-4 ring-white/60' : 'ring-2 ring-transparent'}`}
-      style={{
-        backgroundColor: data.color,
-        color: data.textColor
-      }}
-    >
+    <div className={`process-node ${selected ? 'process-node--selected' : ''}`}>
+      {/* Top handle */}
+      <Handle
+        type="source"
+        position={Position.Top}
+        className="process-node-handle"
+        id="top"
+      />
+      {/* Right handle */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="process-node-handle"
+        id="right"
+      />
+      {/* Bottom handle */}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="process-node-handle"
+        id="bottom"
+      />
+      {/* Left handle */}
+      <Handle
+        type="source"
+        position={Position.Left}
+        className="process-node-handle"
+        id="left"
+      />
       <div className="process-node__inner">
-        <p className="text-base font-semibold leading-tight">
-          {data.label || 'Untitled node'}
+        <p className="process-node__title">{data.title || 'Untitled step'}</p>
+        <p className="process-node__description">
+          {data.description || 'Add a short description so collaborators understand this step.'}
         </p>
-        {data.fields?.length > 0 && (
-          <div className="mt-4 space-y-1.5 text-xs">
-            {data.fields.map((field, index) => {
-              if (!field.key && !field.value) {
-                return null
-              }
-              return (
-                <div
-                  key={`${data.label}-${index}`}
-                  className="flex items-center justify-between gap-3 rounded-full bg-white/20 px-3 py-1 backdrop-blur"
-                  style={{
-                    color: data.textColor
-                  }}
-                >
-                  <span className="font-medium uppercase tracking-wide opacity-80">
-                    {field.key || 'Field'}
-                  </span>
-                  <span className="text-right">{field.value || 'Value'}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
     </div>
   )

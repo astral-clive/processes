@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { Category, ProcessIdentifier } from '@/types'
 
 type SidebarProps = {
@@ -29,10 +31,25 @@ const Sidebar = ({
   onRenameProcess,
   onDeleteProcess
 }: SidebarProps) => {
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(categories.map((cat) => cat.id))
+  )
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(categoryId)) {
+        next.delete(categoryId)
+      } else {
+        next.add(categoryId)
+      }
+      return next
+    })
+  }
   return (
     <aside className="w-[280px] bg-ink-950 text-white flex flex-col border-r border-white/5">
       <div className="p-6 border-b border-white/5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Processes</p>
             <h1 className="mt-1 text-2xl font-semibold">Processes</h1>
@@ -74,30 +91,41 @@ const Sidebar = ({
             No categories yet. {editMode ? 'Create your first one to get started.' : 'Enable edit mode to add one.'}
           </div>
         )}
-        {categories.map((category) => (
-          <div key={category.id} className="space-y-3">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
-              <span>{category.name}</span>
-              {editMode && (
-                <div className="flex items-center gap-2 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => onRenameCategory(category.id)}
-                    className="text-slate-300 hover:text-white transition"
-                  >
-                    Rename
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteCategory(category.id)}
-                    className="text-rose-300 hover:text-rose-200 transition"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
+        {categories.map((category) => {
+          const isExpanded = expandedCategories.has(category.id)
+          
+          return (
+            <div key={category.id} className="space-y-3">
+              <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  className="flex items-center gap-1.5 hover:text-slate-200 transition"
+                >
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  <span>{category.name}</span>
+                </button>
+                {editMode && (
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => onRenameCategory(category.id)}
+                      className="text-slate-300 hover:text-white transition"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteCategory(category.id)}
+                      className="text-rose-300 hover:text-rose-200 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+              {isExpanded && (
+                <div className="space-y-2">
               {category.processes.map((process) => {
                 const isActive =
                   selectedProcess?.categoryId === category.id &&
@@ -161,19 +189,21 @@ const Sidebar = ({
                   </div>
                 )
               })}
-              {editMode && (
-                <button
-                  type="button"
-                  onClick={() => onAddProcess(category.id)}
-                  className="w-full text-left text-xs text-slate-400 hover:text-white transition flex items-center gap-2 px-1"
-                >
-                  <span className="text-base leading-none">+</span>
-                  Add process
-                </button>
+                  {editMode && (
+                    <button
+                      type="button"
+                      onClick={() => onAddProcess(category.id)}
+                      className="w-full text-left text-xs text-slate-400 hover:text-white transition flex items-center gap-2 px-1"
+                    >
+                      <span className="text-base leading-none">+</span>
+                      Add process
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </nav>
     </aside>
   )

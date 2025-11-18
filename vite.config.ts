@@ -57,42 +57,30 @@ const defaultProcessDocument = (
     },
     nodes: [
       {
-        id: `${baseId}-brief`,
+        id: `${baseId}-step-1`,
+        type: 'processNode',
+        position: { x: 280, y: -20 },
+        data: {
+          title: 'New step',
+          description: 'Describe this step so teammates know what needs to happen.'
+        }
+      },
+      {
+        id: `${baseId}-step-2`,
+        type: 'processNode',
+        position: { x: 480, y: 120 },
+        data: {
+          title: 'New step',
+          description: 'Describe this step so teammates know what needs to happen.'
+        }
+      },
+      {
+        id: `${baseId}-step-3`,
         type: 'processNode',
         position: { x: 80, y: 120 },
         data: {
-          label: 'New Node',
-          shape: 'rectangle',
-          color: '#6366f1',
-          textColor: '#ffffff',
-          fields: [
-            { key: 'Owner', value: titleCategory },
-            { key: 'SLA', value: '1d' }
-          ]
-        }
-      },
-      {
-        id: `${baseId}-decision`,
-        type: 'processNode',
-        position: { x: 320, y: 80 },
-        data: {
-          label: 'Decision',
-          shape: 'diamond',
-          color: '#facc15',
-          textColor: '#0f172a',
-          fields: [{ key: 'Criteria', value: 'Quality gates' }]
-        }
-      },
-      {
-        id: `${baseId}-complete`,
-        type: 'processNode',
-        position: { x: 540, y: 140 },
-        data: {
-          label: 'Complete',
-          shape: 'circle',
-          color: '#22d3ee',
-          textColor: '#0f172a',
-          fields: [{ key: 'Output', value: 'Deliverable' }]
+          title: 'New step',
+          description: 'Describe this step so teammates know what needs to happen.'
         }
       }
     ],
@@ -100,27 +88,39 @@ const defaultProcessDocument = (
       {
         id: `${baseId}-edge-1`,
         type: 'processEdge',
-        source: `${baseId}-brief`,
-        target: `${baseId}-decision`,
+        source: `${baseId}-step-1`,
+        sourceHandle: 'right',
+        target: `${baseId}-step-2`,
+        targetHandle: 'top',
         data: {
-          label: 'Submit',
-          color: '#6366f1',
+          label: 'Yes',
+          color: '#94a3b8',
           lineStyle: 'solid',
           arrow: 'arrow',
           branchStyle: 'default'
+        },
+        markerEnd: {
+          type: 'arrowclosed',
+          color: '#94a3b8'
         }
       },
       {
         id: `${baseId}-edge-2`,
         type: 'processEdge',
-        source: `${baseId}-decision`,
-        target: `${baseId}-complete`,
+        source: `${baseId}-step-1`,
+        sourceHandle: 'left',
+        target: `${baseId}-step-3`,
+        targetHandle: 'top',
         data: {
-          label: 'Approve',
-          color: '#22c55e',
+          label: 'No',
+          color: '#94a3b8',
           lineStyle: 'solid',
           arrow: 'arrow',
-          branchStyle: 'positive'
+          branchStyle: 'default'
+        },
+        markerEnd: {
+          type: 'arrowclosed',
+          color: '#94a3b8'
         }
       }
     ]

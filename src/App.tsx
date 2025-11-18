@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Sidebar as SidebarIcon } from 'lucide-react'
 import Sidebar from '@/components/sidebar/Sidebar'
 import FlowWorkspace from '@/components/process/FlowWorkspace'
 import {
@@ -14,6 +15,7 @@ import type {
   CategoriesDocument,
   ProcessDocument,
   ProcessIdentifier,
+  ProcessNodeData,
   ProcessUpdater
 } from '@/types'
 
@@ -34,6 +36,65 @@ const uniqueSlug = (base: string, existing: string[]) => {
   return candidate
 }
 
+type LegacyNodeData = Partial<ProcessNodeData> & Record<string, unknown>
+
+const formatFieldsDescription = (fields: unknown): string => {
+  if (!Array.isArray(fields)) {
+    return ''
+  }
+  const tokens = fields
+    .map((field) => {
+      if (!field || typeof field !== 'object') {
+        return ''
+      }
+      const key = typeof (field as { key?: string }).key === 'string' ? (field as { key?: string }).key?.trim() : ''
+      const value =
+        typeof (field as { value?: string }).value === 'string' ? (field as { value?: string }).value?.trim() : ''
+      if (key && value) return `${key}: ${value}`
+      return key || value || ''
+    })
+    .filter(Boolean)
+  return tokens.join(' • ')
+}
+
+const normalizeNodeData = (data: LegacyNodeData): ProcessNodeData => {
+  const legacyLabel = typeof data.label === 'string' ? data.label : ''
+  const titleCandidate = typeof data.title === 'string' ? data.title : legacyLabel
+  const title = titleCandidate || 'Untitled step'
+
+  const descriptions: string[] = []
+  if (typeof data.description === 'string') {
+    descriptions.push(data.description)
+  }
+  const fromFields = formatFieldsDescription(data.fields)
+  if (fromFields) {
+    descriptions.push(fromFields)
+  }
+  descriptions.push('Add context for this step.')
+
+  const description = descriptions.find((item) => item && item.length > 0) || 'Add context for this step.'
+
+  return {
+    title,
+    description
+  }
+}
+
+const normalizeProcessDoc = (doc: ProcessDocument): ProcessDocument => ({
+  ...doc,
+  nodes: doc.nodes.map((node, index) => ({
+    ...node,
+    id: node.id || `${doc.meta.categoryId}-${doc.meta.processId}-node-${index}`,
+    type: 'processNode',
+    data: normalizeNodeData(node.data as LegacyNodeData)
+  })),
+  edges: doc.edges.map((edge, index) => ({
+    ...edge,
+    id: edge.id || `${doc.meta.categoryId}-${doc.meta.processId}-edge-${index}`,
+    type: edge.type ?? 'processEdge'
+  }))
+})
+
 function App() {
   const [categoriesDoc, setCategoriesDoc] = useState<CategoriesDocument>({ categories: [] })
   const [categoriesLoading, setCategoriesLoading] = useState(true)
@@ -43,9 +104,9 @@ function App() {
   const [processLoading, setProcessLoading] = useState(false)
   const [processError, setProcessError] = useState<string | null>(null)
   const [editMode, setEditMode] = useState(false)
-  const [dirty, setDirty] = useState(false)
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), [])
 
   useEffect(() => {
     const load = async () => {
@@ -112,12 +173,10 @@ function App() {
     const loadProcess = async () => {
       setProcessLoading(true)
       setProcessError(null)
-      setDirty(false)
-      setSaveState('idle')
 
       try {
         const doc = await fetchProcess(selectedProcess.categoryId, selectedProcess.processId)
-        setProcessDoc(doc)
+        setProcessDoc(normalizeProcessDoc(doc))
       } catch (error) {
         console.error(error)
         setProcessError('Unable to load this process.')
@@ -128,28 +187,6 @@ function App() {
 
     loadProcess()
   }, [selectedProcess])
-
-  useEffect(() => {
-    if (!dirty || !processDoc || !selectedProcess) {
-      return
-    }
-
-    const timer = window.setTimeout(async () => {
-      setSaveState('saving')
-      try {
-        const updated = await persistProcess(processDoc)
-        setProcessDoc(updated)
-        setDirty(false)
-        setSaveState('saved')
-        setLastSavedAt(Date.now())
-      } catch (error) {
-        console.error(error)
-        setSaveState('error')
-      }
-    }, 900)
-
-    return () => window.clearTimeout(timer)
-  }, [dirty, processDoc, selectedProcess])
 
   const persistCategoriesChange = useCallback(
     async (updater: (prev: CategoriesDocument) => CategoriesDocument) => {
@@ -175,13 +212,32 @@ function App() {
     (updater: ProcessUpdater) => {
       setProcessDoc((prev) => {
         if (!prev) return prev
-        const next = updater(prev)
-        setDirty(true)
-        return next
+        const updated = updater(prev)
+        // Check if the updater marked this as having unsaved changes
+        if ((updated as any)._hasUnsavedChanges) {
+          setHasUnsavedChanges(true)
+          delete (updated as any)._hasUnsavedChanges
+        }
+        return normalizeProcessDoc(updated)
       })
     },
     []
   )
+
+  const handleSaveProcess = useCallback(async () => {
+    if (!processDoc) return false
+
+    try {
+      const updated = await persistProcess(processDoc)
+      setProcessDoc(normalizeProcessDoc(updated))
+      setHasUnsavedChanges(false)
+      return true
+    } catch (error) {
+      console.error(error)
+      setProcessError('Unable to save this process.')
+      return false
+    }
+  }, [processDoc])
 
   const handleAddCategory = useCallback(async () => {
     const name = window.prompt('New category name?')?.trim()
@@ -276,9 +332,7 @@ function App() {
         }))
 
         setSelectedProcess({ categoryId, processId })
-        setProcessDoc(doc)
-        setDirty(false)
-        setSaveState('idle')
+        setProcessDoc(normalizeProcessDoc(doc))
       } catch (error) {
         console.error(error)
         setProcessError('Unable to create that process.')
@@ -370,10 +424,7 @@ function App() {
     setProcessError(null)
     try {
       const doc = await resetProcess(selectedProcess.categoryId, selectedProcess.processId)
-      setProcessDoc(doc)
-      setDirty(false)
-      setSaveState('idle')
-      setLastSavedAt(Date.now())
+      setProcessDoc(normalizeProcessDoc(doc))
     } catch (error) {
       console.error(error)
       setProcessError('Unable to reset this process.')
@@ -382,23 +433,35 @@ function App() {
   }, [selectedProcess])
 
   return (
-    <div className="flex h-screen bg-ink-950 text-white">
-      <Sidebar
-        categories={categoriesDoc.categories}
-        selectedProcess={selectedProcess}
-        editMode={editMode}
-        loading={categoriesLoading}
-        onToggleEditMode={() => setEditMode((prev) => !prev)}
-        onSelectProcess={setSelectedProcess}
-        onAddCategory={handleAddCategory}
-        onRenameCategory={handleRenameCategory}
-        onDeleteCategory={handleDeleteCategory}
-        onAddProcess={handleAddProcess}
-        onRenameProcess={handleRenameProcess}
-        onDeleteProcess={handleDeleteProcess}
-      />
+    <div className="flex h-screen bg-ink-950 text-white relative">
+      {sidebarOpen && (
+        <Sidebar
+          categories={categoriesDoc.categories}
+          selectedProcess={selectedProcess}
+          editMode={editMode}
+          loading={categoriesLoading}
+          onToggleEditMode={() => setEditMode((prev) => !prev)}
+          onSelectProcess={setSelectedProcess}
+          onAddCategory={handleAddCategory}
+          onRenameCategory={handleRenameCategory}
+          onDeleteCategory={handleDeleteCategory}
+          onAddProcess={handleAddProcess}
+          onRenameProcess={handleRenameProcess}
+          onDeleteProcess={handleDeleteProcess}
+        />
+      )}
 
-      <main className="flex-1 relative flex flex-col bg-gradient-to-b from-ink-900 to-ink-950">
+      <main className="flex-1 relative flex flex-col bg-ink-950">
+        {!sidebarOpen && (!processDoc || processLoading) && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="absolute left-6 top-6 z-10 icon-button"
+            title="Show sidebar"
+          >
+            <SidebarIcon size={18} />
+          </button>
+        )}
         {categoriesError && (
           <div className="bg-rose-500/10 border border-rose-500/30 text-rose-200 px-4 py-2 text-sm">
             {categoriesError}
@@ -419,9 +482,11 @@ function App() {
             <FlowWorkspace
               doc={processDoc}
               onDocChange={handleProcessChange}
-              autoSaveState={saveState}
-              lastSavedAt={lastSavedAt}
+              onSave={handleSaveProcess}
               onReset={handleResetProcess}
+              sidebarOpen={sidebarOpen}
+              onToggleSidebar={toggleSidebar}
+              hasUnsavedChanges={hasUnsavedChanges}
             />
           )}
           {!processLoading && !processDoc && (

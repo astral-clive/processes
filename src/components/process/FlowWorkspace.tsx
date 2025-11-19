@@ -28,7 +28,8 @@ import {
   Check,
   Upload,
   Image,
-  FileText
+  FileText,
+  Clipboard
 } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
@@ -111,8 +112,11 @@ const FlowWorkspace = ({
   const [showSavedToast, setShowSavedToast] = useState(false)
   const [exportingPNG, setExportingPNG] = useState(false)
   const [exportingPDF, setExportingPDF] = useState(false)
+  const [exportingClipboard, setExportingClipboard] = useState(false)
   const [pngDropdownOpen, setPngDropdownOpen] = useState(false)
   const [pdfDropdownOpen, setPdfDropdownOpen] = useState(false)
+  const [clipboardDropdownOpen, setClipboardDropdownOpen] = useState(false)
+  const [showCopiedToast, setShowCopiedToast] = useState(false)
   const { project, fitView } = useReactFlow()
   const reactFlowRef = useRef<HTMLDivElement>(null)
   
@@ -483,21 +487,95 @@ const FlowWorkspace = ({
     }
   }, [doc.meta.categoryId, doc.meta.processId, fitView])
 
+  const handleExportClipboard = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingClipboard(true)
+    setClipboardDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Convert canvas to blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error('Failed to create blob')
+          setExportingClipboard(false)
+          return
+        }
+
+        try {
+          // Copy to clipboard using Clipboard API
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob
+            })
+          ])
+          
+          // Show toast notification
+          setShowCopiedToast(true)
+          setTimeout(() => {
+            setShowCopiedToast(false)
+          }, 2000)
+        } catch (error) {
+          console.error('Error copying to clipboard:', error)
+          // Fallback: try copying as data URL
+          try {
+            const dataUrl = canvas.toDataURL('image/png')
+            await navigator.clipboard.writeText(dataUrl)
+            setShowCopiedToast(true)
+            setTimeout(() => {
+              setShowCopiedToast(false)
+            }, 2000)
+          } catch (fallbackError) {
+            console.error('Fallback clipboard copy also failed:', fallbackError)
+          }
+        } finally {
+          setExportingClipboard(false)
+        }
+      }, 'image/png')
+    } catch (error) {
+      console.error('Error exporting to clipboard:', error)
+      setExportingClipboard(false)
+    }
+  }, [fitView])
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (pngDropdownOpen || pdfDropdownOpen) {
+      if (pngDropdownOpen || pdfDropdownOpen || clipboardDropdownOpen) {
         const target = event.target as HTMLElement
         if (!target.closest('.export-button-container')) {
           setPngDropdownOpen(false)
           setPdfDropdownOpen(false)
+          setClipboardDropdownOpen(false)
         }
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [pngDropdownOpen, pdfDropdownOpen])
+  }, [pngDropdownOpen, pdfDropdownOpen, clipboardDropdownOpen])
 
   return (
     <div className="flex h-full">
@@ -572,6 +650,7 @@ const FlowWorkspace = ({
                     onClick={() => {
                       setPdfDropdownOpen((prev) => !prev)
                       setPngDropdownOpen(false)
+                      setClipboardDropdownOpen(false)
                     }}
                     disabled={exportingPDF}
                     className="icon-button"
@@ -598,6 +677,45 @@ const FlowWorkspace = ({
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
                       >
                         Export entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Clipboard Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClipboardDropdownOpen((prev) => !prev)
+                      setPngDropdownOpen(false)
+                      setPdfDropdownOpen(false)
+                    }}
+                    disabled={exportingClipboard}
+                    className="icon-button"
+                    title="Copy to clipboard"
+                  >
+                    {exportingClipboard ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Clipboard size={18} />
+                    )}
+                  </button>
+                  {clipboardDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportClipboard(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Copy visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportClipboard(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Copy entire flowchart
                       </button>
                     </div>
                   )}
@@ -721,6 +839,14 @@ const FlowWorkspace = ({
               <span className="font-medium">Saved</span>
             </>
           )}
+        </div>
+      )}
+
+      {/* Toast notification for clipboard copy */}
+      {showCopiedToast && (
+        <div className="fixed bottom-5 right-5 z-50 bg-blue-500/90 backdrop-blur-sm border border-blue-400/50 rounded-lg shadow-lg px-4 py-3 flex items-center gap-2 text-white animate-slide-up">
+          <Check size={18} />
+          <span className="font-medium">Copied</span>
         </div>
       )}
     </div>

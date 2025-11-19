@@ -75,6 +75,7 @@ const normalizeNodeData = (data: LegacyNodeData): ProcessNodeData => {
   const description = descriptions.find((item) => item && item.length > 0) || 'Add context for this step.'
 
   return {
+    ...data, // Preserve all existing properties like color
     title,
     description
   }
@@ -298,6 +299,36 @@ function App() {
     [categoriesDoc, persistCategoriesChange]
   )
 
+  const handleMoveCategoryUp = useCallback(
+    async (categoryId: string) => {
+      const currentIndex = categoriesDoc.categories.findIndex((cat) => cat.id === categoryId)
+      if (currentIndex <= 0) return // Already at top or not found
+
+      await persistCategoriesChange((prev) => {
+        const newCategories = [...prev.categories]
+        const [movedCategory] = newCategories.splice(currentIndex, 1)
+        newCategories.splice(currentIndex - 1, 0, movedCategory)
+        return { categories: newCategories }
+      })
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
+  const handleMoveCategoryDown = useCallback(
+    async (categoryId: string) => {
+      const currentIndex = categoriesDoc.categories.findIndex((cat) => cat.id === categoryId)
+      if (currentIndex === -1 || currentIndex >= categoriesDoc.categories.length - 1) return // Not found or already at bottom
+
+      await persistCategoriesChange((prev) => {
+        const newCategories = [...prev.categories]
+        const [movedCategory] = newCategories.splice(currentIndex, 1)
+        newCategories.splice(currentIndex + 1, 0, movedCategory)
+        return { categories: newCategories }
+      })
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
   const handleAddProcess = useCallback(
     async (categoryId: string) => {
       const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
@@ -432,6 +463,71 @@ function App() {
     }
   }, [selectedProcess])
 
+  const handleImportProcess = useCallback(
+    async (categoryId: string, importedData: ProcessDocument) => {
+      setProcessError(null)
+      try {
+        const category = categoriesDoc.categories.find((cat) => cat.id === categoryId)
+        if (!category) {
+          alert('Category not found.')
+          return
+        }
+
+        // Use the title from the imported data
+        const processName = importedData.meta.title || 'Imported Process'
+
+        // Create a process ID from the process name
+        const processId = uniqueSlug(
+          slugify(processName),
+          category.processes.map((process) => process.id)
+        )
+
+        // First create the process (this creates a default process on the server)
+        await createProcess({
+          categoryId,
+          categoryName: category.name,
+          processId,
+          processName
+        })
+
+        // Then immediately update it with the imported data
+        const newProcessDoc: ProcessDocument = {
+          meta: {
+            categoryId,
+            processId,
+            title: processName,
+            description: importedData.meta.description,
+            updatedAt: new Date().toISOString()
+          },
+          nodes: importedData.nodes,
+          edges: importedData.edges
+        }
+
+        const saved = await persistProcess(newProcessDoc)
+
+        // Update categories to include the new process
+        await persistCategoriesChange((prev) => ({
+          categories: prev.categories.map((cat) =>
+            cat.id === categoryId
+              ? { ...cat, processes: [...cat.processes, { id: processId, name: processName }] }
+              : cat
+          )
+        }))
+
+        // Navigate to the new process
+        setSelectedProcess({ categoryId, processId })
+        setProcessDoc(normalizeProcessDoc(saved))
+        
+        alert(`Process "${processName}" imported successfully!`)
+      } catch (error) {
+        console.error(error)
+        setProcessError('Unable to import process.')
+        alert('Failed to import process. Please try again.')
+      }
+    },
+    [categoriesDoc, persistCategoriesChange]
+  )
+
   return (
     <div className="flex h-screen bg-ink-950 text-white relative">
       {sidebarOpen && (
@@ -445,6 +541,9 @@ function App() {
           onAddCategory={handleAddCategory}
           onRenameCategory={handleRenameCategory}
           onDeleteCategory={handleDeleteCategory}
+          onMoveCategoryUp={handleMoveCategoryUp}
+          onMoveCategoryDown={handleMoveCategoryDown}
+          onImportProcess={handleImportProcess}
           onAddProcess={handleAddProcess}
           onRenameProcess={handleRenameProcess}
           onDeleteProcess={handleDeleteProcess}

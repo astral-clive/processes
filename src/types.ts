@@ -3,6 +3,7 @@ import type { Edge, Node } from 'reactflow'
 export type ProcessNodeData = {
   title: string
   description: string
+  color?: string
 }
 
 export type ProcessNode = Node<ProcessNodeData>

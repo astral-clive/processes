@@ -1,0 +1,354 @@
+{
+  "meta": {
+    "categoryId": "alpha",
+    "processId": "onboarding-to-team",
+    "title": "Alpha Onboarding to Team Flow",
+    "description": "Auto-generated process for Alpha · Onboarding to Team",
+    "updatedAt": "2025-11-18T23:58:36.033Z"
+  },
+  "nodes": [
+    {
+      "id": "alpha-onboarding-to-team-step-1",
+      "type": "processNode",
+      "position": {
+        "x": 100,
+        "y": -80
+      },
+      "data": {
+        "title": "Make Coffee",
+        "description": "Welcome the new employee in with a coffee"
+      },
+      "selected": false,
+      "width": 200,
+      "height": 115,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": -80
+      }
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763509838206",
+      "type": "processNode",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "data": {
+        "title": "Question:",
+        "description": "Do they want a bagel?",
+        "color": "#5eead4"
+      },
+      "width": 200,
+      "height": 100,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763509859065",
+      "type": "processNode",
+      "position": {
+        "x": 460,
+        "y": 40
+      },
+      "data": {
+        "title": "Assistant",
+        "description": "Assistant provides a bagel from the kitchen.",
+        "color": "#fde047"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 460,
+        "y": 40
+      }
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763510006435",
+      "type": "processNode",
+      "position": {
+        "x": 100,
+        "y": 380
+      },
+      "data": {
+        "title": "Question",
+        "description": "Do they need a laptop?",
+        "color": "#5eead4"
+      },
+      "width": 200,
+      "height": 100,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763510093103",
+      "type": "processNode",
+      "position": {
+        "x": -240,
+        "y": 280
+      },
+      "data": {
+        "title": "IT Team",
+        "description": "IT Team walks them through the setup",
+        "color": "#fde047"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -240,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763510185333",
+      "type": "processNode",
+      "position": {
+        "x": 100,
+        "y": 540
+      },
+      "data": {
+        "title": "Take them to their Desk",
+        "description": "Take them to their desk and introduce them to the surrounding people.",
+        "color": "#3b82f6"
+      },
+      "width": 200,
+      "height": 155,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763510237486",
+      "type": "processNode",
+      "position": {
+        "x": 380,
+        "y": 560
+      },
+      "data": {
+        "title": "Add them to Slack",
+        "description": "Add them to all of the Slack channels required.",
+        "color": "#3b82f6"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 560
+      },
+      "dragging": false
+    },
+    {
+      "id": "alpha-onboarding-to-team-step-1763510275355",
+      "type": "processNode",
+      "position": {
+        "x": 620,
+        "y": 560
+      },
+      "data": {
+        "title": "Refill their Coffee",
+        "description": "Now it's time to refill their coffee!",
+        "color": "#3b82f6"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 620,
+        "y": 560
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "alpha-onboarding-to-team-step-1",
+      "sourceHandle": "bottom",
+      "target": "alpha-onboarding-to-team-step-1763509838206",
+      "targetHandle": "top",
+      "id": "alpha-onboarding-to-team-1763509852821",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763509838206",
+      "sourceHandle": "bottom",
+      "target": "alpha-onboarding-to-team-step-1763510006435",
+      "targetHandle": "top",
+      "id": "alpha-onboarding-to-team-1763510034489",
+      "type": "processEdge",
+      "data": {
+        "label": "No",
+        "color": "#94a3b8",
+        "lineStyle": "dashed",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      },
+      "selected": false
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763509838206",
+      "sourceHandle": "right",
+      "target": "alpha-onboarding-to-team-step-1763509859065",
+      "targetHandle": "left",
+      "id": "alpha-onboarding-to-team-1763510052392",
+      "type": "processEdge",
+      "data": {
+        "label": "yes",
+        "color": "#94a3b8",
+        "lineStyle": "dashed",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      },
+      "selected": false
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763509859065",
+      "sourceHandle": "bottom",
+      "target": "alpha-onboarding-to-team-step-1763510006435",
+      "targetHandle": "top",
+      "id": "alpha-onboarding-to-team-1763510074178",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763510006435",
+      "sourceHandle": "left",
+      "target": "alpha-onboarding-to-team-step-1763510093103",
+      "targetHandle": "right",
+      "id": "alpha-onboarding-to-team-1763510169808",
+      "type": "processEdge",
+      "data": {
+        "label": "Yes",
+        "color": "#94a3b8",
+        "lineStyle": "dashed",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      },
+      "selected": false
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763510006435",
+      "sourceHandle": "bottom",
+      "target": "alpha-onboarding-to-team-step-1763510185333",
+      "targetHandle": "top",
+      "id": "alpha-onboarding-to-team-1763510218528",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763510093103",
+      "sourceHandle": "bottom",
+      "target": "alpha-onboarding-to-team-step-1763510185333",
+      "targetHandle": "left",
+      "id": "alpha-onboarding-to-team-1763510222905",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763510185333",
+      "sourceHandle": "right",
+      "target": "alpha-onboarding-to-team-step-1763510237486",
+      "targetHandle": "left",
+      "id": "alpha-onboarding-to-team-1763510266806",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    },
+    {
+      "source": "alpha-onboarding-to-team-step-1763510237486",
+      "sourceHandle": "right",
+      "target": "alpha-onboarding-to-team-step-1763510275355",
+      "targetHandle": "left",
+      "id": "alpha-onboarding-to-team-1763510313630",
+      "type": "processEdge",
+      "data": {
+        "label": "",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#94a3b8"
+      }
+    }
+  ]
+}

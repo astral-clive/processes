@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import type { Category, ProcessIdentifier } from '@/types'
+import { ChevronDown, ChevronRight, Pencil, Trash2, ArrowUp, ArrowDown, Download } from 'lucide-react'
+import type { Category, ProcessIdentifier, ProcessDocument } from '@/types'
 
 type SidebarProps = {
   categories: Category[]
@@ -12,6 +12,9 @@ type SidebarProps = {
   onAddCategory: () => void
   onRenameCategory: (categoryId: string) => void
   onDeleteCategory: (categoryId: string) => void
+  onMoveCategoryUp: (categoryId: string) => void
+  onMoveCategoryDown: (categoryId: string) => void
+  onImportProcess: (categoryId: string, importedData: ProcessDocument) => Promise<void>
   onAddProcess: (categoryId: string) => void
   onRenameProcess: (categoryId: string, processId: string) => void
   onDeleteProcess: (categoryId: string, processId: string) => void
@@ -27,6 +30,9 @@ const Sidebar = ({
   onAddCategory,
   onRenameCategory,
   onDeleteCategory,
+  onMoveCategoryUp,
+  onMoveCategoryDown,
+  onImportProcess,
   onAddProcess,
   onRenameProcess,
   onDeleteProcess
@@ -46,6 +52,37 @@ const Sidebar = ({
       return next
     })
   }
+
+  const handleImportToCategory = (categoryId: string) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'application/json,.json'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        try {
+          const imported = JSON.parse(event.target?.result as string)
+          
+          // Validate basic structure
+          if (!imported.meta || !Array.isArray(imported.nodes) || !Array.isArray(imported.edges)) {
+            alert('Invalid process file format. Missing required fields.')
+            return
+          }
+
+          await onImportProcess(categoryId, imported)
+        } catch (error) {
+          console.error(error)
+          alert('Failed to import process. Please check the file format.')
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }
+
   return (
     <aside className="w-[280px] bg-ink-950 text-white flex flex-col border-r border-white/5">
       <div className="p-6 border-b border-white/5">
@@ -91,8 +128,10 @@ const Sidebar = ({
             No categories yet. {editMode ? 'Create your first one to get started.' : 'Enable edit mode to add one.'}
           </div>
         )}
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const isExpanded = expandedCategories.has(category.id)
+          const isFirst = index === 0
+          const hasMultipleCategories = categories.length > 1
           
           return (
             <div key={category.id} className="space-y-3">
@@ -106,20 +145,51 @@ const Sidebar = ({
                   <span>{category.name}</span>
                 </button>
                 {editMode && (
-                  <div className="flex items-center gap-2 text-[11px]">
+                  <div className="flex items-center gap-1">
+                    {hasMultipleCategories && (
+                      isFirst ? (
+                        <button
+                          type="button"
+                          onClick={() => onMoveCategoryDown(category.id)}
+                          className="p-1 text-slate-300 hover:text-white transition rounded"
+                          title="Move down"
+                        >
+                          <ArrowDown size={12} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onMoveCategoryUp(category.id)}
+                          className="p-1 text-slate-300 hover:text-white transition rounded"
+                          title="Move up"
+                        >
+                          <ArrowUp size={12} />
+                        </button>
+                      )
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleImportToCategory(category.id)}
+                      className="p-1 text-blue-300 hover:text-blue-200 transition rounded"
+                      title="Import process"
+                    >
+                      <Download size={12} />
+                    </button>
                     <button
                       type="button"
                       onClick={() => onRenameCategory(category.id)}
-                      className="text-slate-300 hover:text-white transition"
+                      className="p-1 text-slate-300 hover:text-white transition rounded"
+                      title="Rename category"
                     >
-                      Rename
+                      <Pencil size={12} />
                     </button>
                     <button
                       type="button"
                       onClick={() => onDeleteCategory(category.id)}
-                      className="text-rose-300 hover:text-rose-200 transition"
+                      className="p-1 text-rose-300 hover:text-rose-200 transition rounded"
+                      title="Delete category"
                     >
-                      Delete
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 )}
@@ -163,16 +233,17 @@ const Sidebar = ({
                       />
                     </div>
                     {editMode && (
-                      <div className="mt-3 flex gap-3 text-[11px] text-slate-300">
+                      <div className="mt-3 flex gap-2">
                         <button
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation()
                             onRenameProcess(category.id, process.id)
                           }}
-                          className="hover:text-white transition"
+                          className="p-1.5 text-slate-300 hover:text-white transition rounded"
+                          title="Rename process"
                         >
-                          Rename
+                          <Pencil size={13} />
                         </button>
                         <button
                           type="button"
@@ -180,9 +251,10 @@ const Sidebar = ({
                             event.stopPropagation()
                             onDeleteProcess(category.id, process.id)
                           }}
-                          className="text-rose-300 hover:text-rose-200 transition"
+                          className="p-1.5 text-rose-300 hover:text-rose-200 transition rounded"
+                          title="Delete process"
                         >
-                          Delete
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     )}

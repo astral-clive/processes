@@ -26,8 +26,12 @@ import {
   Maximize2,
   Loader2,
   Check,
-  Upload
+  Upload,
+  Image,
+  FileText
 } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
 import type {
   BranchStyle,
@@ -105,7 +109,12 @@ const FlowWorkspace = ({
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showSavedToast, setShowSavedToast] = useState(false)
+  const [exportingPNG, setExportingPNG] = useState(false)
+  const [exportingPDF, setExportingPDF] = useState(false)
+  const [pngDropdownOpen, setPngDropdownOpen] = useState(false)
+  const [pdfDropdownOpen, setPdfDropdownOpen] = useState(false)
   const { project, fitView } = useReactFlow()
+  const reactFlowRef = useRef<HTMLDivElement>(null)
   
   // Open inspector when entering edit mode
   useEffect(() => {
@@ -379,6 +388,117 @@ const FlowWorkspace = ({
     URL.revokeObjectURL(url)
   }, [doc])
 
+  const handleExportPNG = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingPNG(true)
+    setPngDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+      
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${doc.meta.categoryId}-${doc.meta.processId}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+    } catch (error) {
+      console.error('Error exporting PNG:', error)
+    } finally {
+      setExportingPNG(false)
+    }
+  }, [doc.meta.categoryId, doc.meta.processId, fitView])
+
+  const handleExportPDF = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingPDF(true)
+    setPdfDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      })
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+      pdf.save(`${doc.meta.categoryId}-${doc.meta.processId}.pdf`)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setExportingPDF(false)
+    }
+  }, [doc.meta.categoryId, doc.meta.processId, fitView])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pngDropdownOpen || pdfDropdownOpen) {
+        const target = event.target as HTMLElement
+        if (!target.closest('.export-button-container')) {
+          setPngDropdownOpen(false)
+          setPdfDropdownOpen(false)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [pngDropdownOpen, pdfDropdownOpen])
+
   return (
     <div className="flex h-full">
       <div className="flex-1 relative bg-slate-950">
@@ -405,6 +525,85 @@ const FlowWorkspace = ({
             </h2>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {!editMode && (
+              <>
+                {/* PNG Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPngDropdownOpen((prev) => !prev)
+                      setPdfDropdownOpen(false)
+                    }}
+                    disabled={exportingPNG}
+                    className="icon-button"
+                    title="Export as PNG"
+                  >
+                    {exportingPNG ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Image size={18} />
+                    )}
+                  </button>
+                  {pngDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportPNG(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Export visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportPNG(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Export entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* PDF Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdfDropdownOpen((prev) => !prev)
+                      setPngDropdownOpen(false)
+                    }}
+                    disabled={exportingPDF}
+                    className="icon-button"
+                    title="Export as PDF"
+                  >
+                    {exportingPDF ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <FileText size={18} />
+                    )}
+                  </button>
+                  {pdfDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportPDF(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Export visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportPDF(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Export entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             {editMode && (
               <button
                 type="button"
@@ -437,7 +636,7 @@ const FlowWorkspace = ({
           </div>
         </header>
 
-        <div className="relative h-[calc(100%-88px)]">
+        <div className="relative h-[calc(100%-88px)]" ref={reactFlowRef}>
           <ReactFlow
             key={`${doc.meta.categoryId}-${doc.meta.processId}`}
             nodes={nodes}

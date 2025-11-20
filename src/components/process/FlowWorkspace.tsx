@@ -46,6 +46,8 @@ import type {
 
 import ProcessEdgeComponent from './ProcessEdge'
 import ProcessNodeComponent from './ProcessNode'
+import { hooks } from '@/lib/hooks'
+import type { HeaderButtonHookContext, InspectorFieldHookContext } from '@/lib/hook-types'
 
 // Define node and edge types outside component to prevent recreation
 const nodeTypes = {
@@ -720,18 +722,30 @@ const FlowWorkspace = ({
                     </div>
                   )}
                 </div>
+                {/* Plugin buttons for view mode */}
+                {hooks.doAction<HeaderButtonHookContext>('header:viewMode:buttons', {
+                  editMode: false,
+                  doc
+                })}
               </>
             )}
             {editMode && (
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={resetting}
-                className="icon-button"
-                title={resetting ? 'Resetting...' : 'Reset flow'}
-              >
-                <RotateCcw size={18} />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={resetting}
+                  className="icon-button"
+                  title={resetting ? 'Resetting...' : 'Reset flow'}
+                >
+                  <RotateCcw size={18} />
+                </button>
+                {/* Plugin buttons for edit mode */}
+                {hooks.doAction<HeaderButtonHookContext>('header:editMode:buttons', {
+                  editMode: true,
+                  doc
+                })}
+              </>
             )}
             <button
               type="button"
@@ -927,6 +941,12 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
             ))}
           </div>
         </div>
+        {/* Plugin fields for node inspector */}
+        {hooks.doAction<InspectorFieldHookContext>('inspector:node:fields', {
+          node,
+          onUpdateNode,
+          onUpdateEdge
+        })}
       </aside>
     )
   }
@@ -978,6 +998,13 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
           />
           Dashed line
         </label>
+        {/* Plugin fields for edge inspector */}
+        {hooks.doAction<InspectorFieldHookContext>('inspector:edge:fields', {
+          node,
+          edge,
+          onUpdateNode,
+          onUpdateEdge
+        })}
       </aside>
     )
   }

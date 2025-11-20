@@ -2,22 +2,36 @@
 
 This document provides comprehensive guidelines for AI agents to generate well-spaced, collision-free process flowcharts. Follow these rules to ensure nodes are properly positioned, edges route correctly, and the overall layout is clean and readable.
 
-## Automatic Enforcement
+## Automatic Enforcement (Opt‑In for AI)
 
-**Important**: Layout rules are **automatically enforced** when processes are saved. The system will:
+**Important**: Layout rules are **not** forced on human editors anymore. They are only enforced when explicitly requested by the caller.
 
-- ✅ Automatically calculate node heights based on content length
-- ✅ Correct node positions to prevent collisions
-- ✅ Adjust spacing between nodes to meet minimum requirements
-- ✅ Reposition nodes to avoid edge-to-node intersections
-- ✅ Apply proper layout patterns for sequential, branching, and merging flows
+The system can:
 
-This means:
-- **For AI agents**: While it's recommended to follow these rules when generating flowcharts, any violations will be automatically corrected when the process is saved
-- **For manual editing**: The system will automatically fix spacing and collision issues
-- **For programmatic generation**: You can rely on the automatic enforcement, but following the rules will result in better initial layouts
+- ✅ Automatically calculate node heights based on content length  
+- ✅ Correct node positions to prevent collisions  
+- ✅ Adjust spacing between nodes to meet minimum requirements  
+- ✅ Reposition nodes to avoid edge-to-node intersections  
+- ✅ Apply proper layout patterns for sequential, branching, and merging flows  
 
-The enforcement happens transparently in the API middleware (`vite.config.ts`) when processes are created or updated. See the implementation in `src/lib/layout-rules-server.ts` for details.
+How this works:
+
+- **For AI agents or programmatic callers**  
+  - If you want the server to enforce these rules, send a `ProcessDocument` to  
+    `PUT /api/process/:categoryId/:processId` with:
+    - `meta.autoLayout = true`
+  - The API middleware (`vite.config.ts`) will call `enforceLayoutRules` from `src/lib/layout-rules-server.ts`
+    before persisting your document.
+  - This is the intended mode when an AI is generating the entire flow layout.
+
+- **For manual editing (human users in the UI)**  
+  - The client does **not** set `meta.autoLayout`, so layout rules are **not** re-enforced on save.
+  - This preserves the user’s exact drag positions and avoids surprising reflows.
+
+- **For programmatic generation**  
+  - You can either:
+    - Follow all rules in this document yourself and skip `autoLayout`, or
+    - Generate a reasonable layout and set `meta.autoLayout = true` to let the server correct and normalize it.
 
 ## Table of Contents
 

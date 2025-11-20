@@ -221,15 +221,14 @@ export default defineConfig({
                 body.processId,
                 body.processName ?? ''
               )
-              
-              // Enforce layout rules on new process
-              const correctedDoc = enforceLayoutRules(doc)
-              
+
               const filePath = getProcessPath(body.categoryId, body.processId)
-              writeJson(filePath, correctedDoc)
+              // For newly-created processes we assume a human will edit the layout,
+              // so we do NOT enforce layout rules here.
+              writeJson(filePath, doc)
               ensureDir(originalsDir)
               fs.copyFileSync(filePath, getOriginalPath(body.categoryId, body.processId))
-              return sendJson(res, 201, correctedDoc)
+              return sendJson(res, 201, doc)
             }
 
             const parts = url.pathname.split('/').filter(Boolean)
@@ -272,18 +271,24 @@ export default defineConfig({
                 if ('meta' in body && typeof body.meta === 'object' && body.meta) {
                   ;(body.meta as Record<string, unknown>).updatedAt = new Date().toISOString()
                 }
-                
-                // Enforce layout rules automatically
-                try {
-                  const correctedBody = enforceLayoutRules(body as any)
-                  writeJson(processPath, correctedBody)
-                  return sendJson(res, 200, correctedBody)
-                } catch (error) {
-                  console.error('[layout-enforcement]', error)
-                  // If layout enforcement fails, save original but log error
-                  writeJson(processPath, body)
-                  return sendJson(res, 200, body)
-                }
+
+                // Optional layout enforcement:
+                // If the caller (e.g. an AI) sets `meta.autoLayout === true`,
+                // we run the strict layout rules before persisting.
+                const shouldEnforceLayout =
+                  typeof body === 'object' &&
+                  body !== null &&
+                  'meta' in body &&
+                  typeof body.meta === 'object' &&
+                  body.meta !== null &&
+                  (body.meta as any).autoLayout === true
+
+                const finalDoc = shouldEnforceLayout
+                  ? enforceLayoutRules(body as any)
+                  : body
+
+                writeJson(processPath, finalDoc)
+                return sendJson(res, 200, finalDoc)
               }
 
               if (method === 'DELETE' && parts.length === 4) {

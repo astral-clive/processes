@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { defineConfig } from 'vite'
+import { enforceLayoutRules } from './src/lib/layout-rules-server'
 
 const dataDir = path.resolve(__dirname, 'data')
 const categoriesFile = path.join(dataDir, 'categories.json')
@@ -220,11 +221,15 @@ export default defineConfig({
                 body.processId,
                 body.processName ?? ''
               )
+              
+              // Enforce layout rules on new process
+              const correctedDoc = enforceLayoutRules(doc)
+              
               const filePath = getProcessPath(body.categoryId, body.processId)
-              writeJson(filePath, doc)
+              writeJson(filePath, correctedDoc)
               ensureDir(originalsDir)
               fs.copyFileSync(filePath, getOriginalPath(body.categoryId, body.processId))
-              return sendJson(res, 201, doc)
+              return sendJson(res, 201, correctedDoc)
             }
 
             const parts = url.pathname.split('/').filter(Boolean)
@@ -267,8 +272,18 @@ export default defineConfig({
                 if ('meta' in body && typeof body.meta === 'object' && body.meta) {
                   ;(body.meta as Record<string, unknown>).updatedAt = new Date().toISOString()
                 }
-                writeJson(processPath, body)
-                return sendJson(res, 200, body)
+                
+                // Enforce layout rules automatically
+                try {
+                  const correctedBody = enforceLayoutRules(body as any)
+                  writeJson(processPath, correctedBody)
+                  return sendJson(res, 200, correctedBody)
+                } catch (error) {
+                  console.error('[layout-enforcement]', error)
+                  // If layout enforcement fails, save original but log error
+                  writeJson(processPath, body)
+                  return sendJson(res, 200, body)
+                }
               }
 
               if (method === 'DELETE' && parts.length === 4) {

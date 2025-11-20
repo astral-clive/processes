@@ -174,6 +174,20 @@ You can customize:
 - UI components in `src/components/`
 - Data structure by modifying `src/types.ts` and the API middleware in `vite.config.ts`
 
+## Documentation
+
+### Layout Rules for AI Agents
+
+When generating process flowcharts programmatically or with AI assistance, refer to [`docs/LAYOUT_RULES.md`](docs/LAYOUT_RULES.md) for comprehensive guidelines on:
+
+- Dynamic node spacing based on content length
+- Collision detection and overlap prevention
+- Edge routing to avoid node intersections
+- Positioning patterns for sequential, branching, and merging flows
+- Code examples and algorithms
+
+These rules ensure generated flowcharts are well-spaced, collision-free, and readable.
+
 ## License
 
 [Specify your license here]

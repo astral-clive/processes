@@ -4,7 +4,7 @@
     "processId": "onboarding-to-team",
     "title": "Alpha Onboarding to Team Flow",
     "description": "Auto-generated process for Alpha · Onboarding to Team",
-    "updatedAt": "2025-11-18T23:58:36.033Z"
+    "updatedAt": "2025-11-21T20:31:18.482Z"
   },
   "nodes": [
     {
@@ -62,7 +62,7 @@
       },
       "width": 200,
       "height": 115,
-      "selected": false,
+      "selected": true,
       "dragging": false,
       "positionAbsolute": {
         "x": 460,

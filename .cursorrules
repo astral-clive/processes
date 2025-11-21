@@ -7,33 +7,42 @@ When a user asks to "build an extension", "build a plugin", "add a feature", or 
 ### Critical Rules (MUST FOLLOW)
 
 1. **Location**: All plugins MUST be placed in the `plugins/` directory
-   - Single-file plugins: `plugins/my-plugin.tsx`
-   - Multi-file plugins: `plugins/my-plugin/` (with `index.tsx` or named entry point)
+   - ❌ WRONG: `plugins/my-plugin.tsx` AND `plugins/my-plugin-README.md` (loose files)
+   - ✅ CORRECT for single-file: `plugins/my-plugin.tsx` (ONLY if truly single file with no docs)
+   - ✅ CORRECT for multi-file: `plugins/my-plugin/index.tsx` + `plugins/my-plugin/README.md`
    
-2. **DO NOT modify files outside `plugins/`**: 
+2. **Directory Structure (CRITICAL)**: 
+   - **If a plugin has MORE THAN ONE FILE** (including README, types, helpers, etc.):
+     - ✅ MUST create subdirectory: `plugins/my-plugin/`
+     - ✅ Entry point MUST be `index.tsx`
+     - ✅ ALL related files MUST be inside that directory
+   - **Only use loose files for true single-file plugins with no documentation**
+   
+3. **DO NOT modify files outside `plugins/`**: 
    - ❌ DO NOT edit `src/` directory
    - ❌ DO NOT edit core components (`ProcessNode.tsx`, `ProcessEdge.tsx`, etc.)
    - ❌ DO NOT edit `vite.config.ts`, `package.json`, or other config files
    - ✅ ONLY create/modify files within `plugins/` directory
 
-3. **Self-Contained**: If a plugin needs multiple files, services, or APIs:
+4. **Self-Contained**: If a plugin needs multiple files, services, or APIs:
    - Create a subdirectory: `plugins/my-plugin/`
    - Place ALL related files in that directory
    - Example structure:
      ```
      plugins/my-plugin/
-       ├── index.tsx          # Main plugin file
+       ├── index.tsx          # Main plugin entry point (REQUIRED)
+       ├── README.md          # Plugin documentation
        ├── components/        # Plugin-specific components
        ├── services/          # Plugin-specific services/APIs
        ├── utils/             # Plugin-specific utilities
        └── types.ts           # Plugin-specific types
      ```
 
-4. **File type**: Plugin entry points must be `.tsx` files (auto-discovered on startup)
+5. **File type**: Plugin entry points must be `.tsx` files (auto-discovered on startup)
 
-5. **Hook System Only**: Use the hook system - this is the ONLY way to extend functionality
+6. **Hook System Only**: Use the hook system - this is the ONLY way to extend functionality
 
-6. **Documentation**: Read `plugins/README.md` for complete technical reference
+7. **Documentation**: Read `plugins/README.md` for complete technical reference
 
 ### Quick Plugin Template
 
@@ -133,6 +142,30 @@ See `plugins/examples/` for reference implementations:
 
 5. **Debugging**: Check browser console for plugin load messages
 
+## Plugin UI Styling
+
+When adding form elements to inspector panels:
+
+- **Text inputs**: Use `className="form-input"`
+- **Labels**: Use `className="form-label"`
+- **Checkboxes**: Use `className="form-toggle"`
+- **Select dropdowns**: Use `className="form-input"` AND `style={{ colorScheme: 'dark' }}`
+
+**CRITICAL for Select Elements**: Always add `style={{ colorScheme: 'dark' }}` to `<select>` elements to ensure dropdown options are visible against the dark UI. Without this, options may appear as white text on white background.
+
+Example:
+```tsx
+<select
+  className="form-input"
+  style={{ colorScheme: 'dark' }}
+  value={value}
+  onChange={handleChange}
+>
+  <option value="option1">Option 1</option>
+  <option value="option2">Option 2</option>
+</select>
+```
+
 ### Multi-File Plugin Example
 
 ```
@@ -163,4 +196,51 @@ Each process file contains:
 - Edges (with connections, labels, styling, custom data)
 
 Plugins can extend node/edge data objects with custom fields.
+
+## Creating Flowcharts
+
+When creating or modifying flowchart process files, **ALWAYS follow these rules**:
+
+### Edge Connection Handles (CRITICAL)
+
+**All edges MUST specify sourceHandle and targetHandle** for proper flow visualization:
+
+- **Sequential flow (top-to-bottom)**: 
+  ```json
+  {
+    "source": "node-a",
+    "sourceHandle": "bottom",
+    "target": "node-b",
+    "targetHandle": "top"
+  }
+  ```
+
+- **Horizontal branches**:
+  - Right branch: `sourceHandle: "right"`, `targetHandle: "left"`
+  - Left branch: `sourceHandle: "left"`, `targetHandle: "right"`
+
+**Default behavior**: If handles are not specified, edges may connect inconsistently.
+
+### Node Spacing and Layout
+
+- **Vertical spacing**: 70-80px minimum gap between node edges
+- **Horizontal spacing**: 300px+ between parallel branch nodes
+- **Calculate positions dynamically** based on actual node heights
+- **Avoid collisions**: Ensure nodes don't overlap
+- **Follow flow patterns**: Sequential → Branch → Merge
+
+### Required Reading
+
+**Before creating any flowchart**, reference:
+- `docs/LAYOUT_RULES.md` - Comprehensive layout guidelines
+- `data/processes/alpha-onboarding-to-team.json` - Well-formed example
+
+### Quick Checklist
+
+When generating a flowchart:
+- [ ] All edges have `sourceHandle` and `targetHandle` properties
+- [ ] Sequential flows use `bottom → top` handles
+- [ ] Nodes have adequate spacing (70px+ vertical, 300px+ horizontal)
+- [ ] No node overlaps or collisions
+- [ ] Edge paths don't cross through unrelated nodes
 

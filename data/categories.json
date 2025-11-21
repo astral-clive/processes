@@ -9,6 +9,16 @@
           "name": "Onboarding to Team"
         }
       ]
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "processes": [
+        {
+          "id": "car-customization",
+          "name": "Car Customization Flow"
+        }
+      ]
     }
   ]
 }

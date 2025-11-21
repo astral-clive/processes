@@ -551,10 +551,29 @@ Plugins should match the existing UI styling:
 - **Form labels**: Use `className="form-label"` for form field containers
 - **Form inputs**: Use `className="form-input"` for text inputs
 - **Form toggles**: Use `className="form-toggle"` for checkboxes
+- **Select dropdowns**: Use `className="form-input"` + `style={{ colorScheme: 'dark' }}` for proper option visibility
 - **Colors**: Follow the existing color scheme (slate, ink, etc.)
 - **Spacing**: Match existing spacing patterns (`space-y-4`, `gap-2`, etc.)
 
 The application uses Tailwind CSS, so you can use any Tailwind classes.
+
+### Select/Dropdown Styling (Important!)
+
+When adding select dropdowns to the inspector, use this pattern to ensure proper visibility:
+
+```tsx
+<select
+  value={selectedValue}
+  onChange={(e) => handleChange(e.target.value)}
+  className="form-input"
+  style={{ colorScheme: 'dark' }}
+>
+  <option value="option1">Option 1</option>
+  <option value="option2">Option 2</option>
+</select>
+```
+
+**Critical**: The `style={{ colorScheme: 'dark' }}` ensures dropdown options are visible against the dark UI background. Without this, options may appear as white text on white background.
 
 ## Complete Example: Priority Extension
 
@@ -566,23 +585,54 @@ See `priority-extension.ts` for a complete working example that:
 
 ## Organizing Your Plugin
 
+### CRITICAL: Plugin File Organization Rules
+
+**If your plugin has MORE THAN ONE FILE (including docs, types, helpers, etc.):**
+- ✅ MUST create a subdirectory: `plugins/my-plugin/`
+- ✅ Entry point MUST be named `index.tsx`
+- ✅ ALL related files MUST be inside that directory
+- ❌ NEVER put multiple related files loose in `plugins/`
+
+**Examples:**
+
+❌ **WRONG** - Multiple loose files:
+```
+plugins/
+  ├── my-plugin.tsx
+  └── my-plugin-README.md      # ❌ Wrong! Creates clutter
+```
+
+✅ **CORRECT** - Organized in subdirectory:
+```
+plugins/
+  └── my-plugin/
+      ├── index.tsx              # ✅ Entry point
+      └── README.md              # ✅ In same directory
+```
+
 ### Single-File Plugins
 
-For simple plugins, create a single `.tsx` file:
+For truly simple plugins with no documentation or helpers, create a single `.tsx` file:
 
 ```
 plugins/
   └── my-simple-plugin.tsx
 ```
 
+**Only use this for:**
+- Very simple plugins (< 100 lines)
+- No separate documentation needed
+- No helper files, types, or components
+
 ### Multi-File Plugins
 
-For complex plugins that need multiple files, services, or APIs, create a subdirectory:
+For any plugin that needs multiple files, services, or APIs, create a subdirectory:
 
 ```
 plugins/
   └── my-complex-plugin/
       ├── index.tsx              # Main entry point (exports Plugin object)
+      ├── README.md              # Plugin documentation
       ├── components/            # Plugin-specific React components
       │   ├── MyButton.tsx
       │   └── MyModal.tsx
@@ -594,10 +644,11 @@ plugins/
 ```
 
 **Important**: 
-- The entry point must export a default `Plugin` object
+- The entry point must be named `index.tsx` and export a default `Plugin` object
 - ALL plugin code must stay within the `plugins/` directory
 - Do NOT create files outside of `plugins/` directory
 - Do NOT modify core application files
+- Keep each plugin self-contained in its own directory
 
 ### Registering Your Plugin
 

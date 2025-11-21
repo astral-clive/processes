@@ -1,0 +1,525 @@
+{
+  "meta": {
+    "categoryId": "marketing",
+    "processId": "car-customization",
+    "title": "Car Customization Flow",
+    "description": "Example marketing copy flow for car customization options",
+    "updatedAt": "2025-11-21T20:48:06.448Z"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 50
+      },
+      "data": {
+        "title": "Start",
+        "description": "Customer begins customization",
+        "color": "#3b82f6",
+        "copyText": "",
+        "nodeType": "start"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "intro",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 240
+      },
+      "data": {
+        "title": "Introduction",
+        "description": "Welcome copy - always shown",
+        "color": "#8b5cf6",
+        "copyText": "Welcome to our **premium car customization experience**. Each vehicle is meticulously crafted to reflect your __unique style__ and preferences. Let's begin your journey to creating the perfect automobile.",
+        "nodeType": "static"
+      },
+      "width": 200,
+      "height": 193,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 400,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "color-choice",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 518
+      },
+      "data": {
+        "title": "Choose Color",
+        "description": "Customer selects exterior color",
+        "color": "#f59e0b",
+        "copyText": "",
+        "nodeType": "choice"
+      },
+      "width": 200,
+      "height": 115,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "color-red",
+      "type": "processNode",
+      "position": {
+        "x": 40,
+        "y": 720
+      },
+      "data": {
+        "title": "Crimson Red",
+        "description": "Bold red option",
+        "color": "#ef4444",
+        "copyText": "Our signature **Crimson Red** finish commands attention on every road. This vibrant, metallic coating features a deep, rich hue that shimmers in sunlight, making a __bold statement__ about your adventurous spirit.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 720
+      }
+    },
+    {
+      "id": "color-blue",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 720
+      },
+      "data": {
+        "title": "Ocean Blue",
+        "description": "Classic blue option",
+        "color": "#3b82f6",
+        "copyText": "Ocean Blue represents timeless elegance and sophistication. This classic shade features subtle pearl effects that dance across the surface, evoking the serenity of coastal waters while maintaining executive presence.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 400,
+        "y": 720
+      }
+    },
+    {
+      "id": "color-silver",
+      "type": "processNode",
+      "position": {
+        "x": 750,
+        "y": 713
+      },
+      "data": {
+        "title": "Sterling Silver",
+        "description": "Modern silver option",
+        "color": "#94a3b8",
+        "copyText": "Sterling Silver embodies contemporary luxury and modern design. This metallic finish creates a sleek, futuristic appearance that highlights every curve and contour of your vehicle's aerodynamic profile.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "environmental",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 968
+      },
+      "data": {
+        "title": "Environmental Commitment",
+        "description": "Brand values statement - always shown",
+        "color": "#10b981",
+        "copyText": "At our company, we're committed to sustainable luxury. Every vehicle in our lineup features eco-friendly materials and advanced fuel efficiency technology. We believe you shouldn't have to choose between performance and environmental responsibility.",
+        "nodeType": "static"
+      },
+      "width": 200,
+      "height": 216
+    },
+    {
+      "id": "tinting-choice",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 1264
+      },
+      "data": {
+        "title": "Window Tinting",
+        "description": "Privacy and protection options",
+        "color": "#f59e0b",
+        "copyText": "",
+        "nodeType": "choice"
+      },
+      "width": 200,
+      "height": 115
+    },
+    {
+      "id": "tinting-yes",
+      "type": "processNode",
+      "position": {
+        "x": 225,
+        "y": 1459
+      },
+      "data": {
+        "title": "Premium Tinting",
+        "description": "Add tinting",
+        "color": "#6366f1",
+        "copyText": "Our premium ceramic window tinting provides 99% UV protection while maintaining crystal-clear visibility. Enjoy enhanced privacy, reduced glare, and a cooler cabin temperature on sunny days.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "tinting-no",
+      "type": "processNode",
+      "position": {
+        "x": 575,
+        "y": 1459
+      },
+      "data": {
+        "title": "Standard Glass",
+        "description": "No additional tinting",
+        "color": "#6366f1",
+        "copyText": "Maintain the classic look with our standard factory glass. Still featuring UV-resistant coating for protection, this option keeps your vehicle's original aesthetic intact.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "wheel-choice",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 1714
+      },
+      "data": {
+        "title": "Wheel Size",
+        "description": "Performance and style options",
+        "color": "#f59e0b",
+        "copyText": "",
+        "nodeType": "choice"
+      },
+      "width": 200,
+      "height": 115
+    },
+    {
+      "id": "wheel-18",
+      "type": "processNode",
+      "position": {
+        "x": 225,
+        "y": 1909
+      },
+      "data": {
+        "title": "18\" Sport Wheels",
+        "description": "Balanced performance",
+        "color": "#64748b",
+        "copyText": "Our 18-inch sport wheels offer the perfect balance of comfort and performance. Paired with premium all-season tires, they provide excellent handling while maintaining a smooth, refined ride quality.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 175
+    },
+    {
+      "id": "wheel-20",
+      "type": "processNode",
+      "position": {
+        "x": 575,
+        "y": 1909
+      },
+      "data": {
+        "title": "20\" Performance Wheels",
+        "description": "Maximum impact",
+        "color": "#64748b",
+        "copyText": "Make a statement with our 20-inch performance wheels. These larger rims create a commanding road presence while enhancing steering response and cornering capability for the enthusiast driver.",
+        "nodeType": "option"
+      },
+      "width": 200,
+      "height": 198
+    },
+    {
+      "id": "end",
+      "type": "processNode",
+      "position": {
+        "x": 400,
+        "y": 2164
+      },
+      "data": {
+        "title": "Configuration Complete",
+        "description": "Ready to export",
+        "color": "#10b981",
+        "copyText": "Your personalized vehicle configuration is complete. Review your selections above and export your customized copy deck for review.",
+        "nodeType": "end"
+      },
+      "width": 200,
+      "height": 198
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-intro",
+      "source": "start",
+      "sourceHandle": "bottom",
+      "target": "intro",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-intro-color",
+      "source": "intro",
+      "sourceHandle": "bottom",
+      "target": "color-choice",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-color-red",
+      "source": "color-choice",
+      "sourceHandle": "bottom",
+      "target": "color-red",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "Red",
+        "color": "#ef4444",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "danger"
+      }
+    },
+    {
+      "id": "e-color-blue",
+      "source": "color-choice",
+      "sourceHandle": "bottom",
+      "target": "color-blue",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "Blue",
+        "color": "#3b82f6",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "positive"
+      }
+    },
+    {
+      "id": "e-color-silver",
+      "source": "color-choice",
+      "sourceHandle": "bottom",
+      "target": "color-silver",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "Silver",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-red-env",
+      "source": "color-red",
+      "sourceHandle": "bottom",
+      "target": "environmental",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-blue-env",
+      "source": "color-blue",
+      "sourceHandle": "bottom",
+      "target": "environmental",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-silver-env",
+      "source": "color-silver",
+      "sourceHandle": "bottom",
+      "target": "environmental",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      },
+      "selected": false
+    },
+    {
+      "id": "e-env-tinting",
+      "source": "environmental",
+      "sourceHandle": "bottom",
+      "target": "tinting-choice",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-tinting-yes",
+      "source": "tinting-choice",
+      "sourceHandle": "bottom",
+      "target": "tinting-yes",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "Yes",
+        "color": "#10b981",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "positive"
+      }
+    },
+    {
+      "id": "e-tinting-no",
+      "source": "tinting-choice",
+      "sourceHandle": "bottom",
+      "target": "tinting-no",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "No",
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-tint-yes-wheel",
+      "source": "tinting-yes",
+      "sourceHandle": "bottom",
+      "target": "wheel-choice",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-tint-no-wheel",
+      "source": "tinting-no",
+      "sourceHandle": "bottom",
+      "target": "wheel-choice",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-wheel-18",
+      "source": "wheel-choice",
+      "sourceHandle": "bottom",
+      "target": "wheel-18",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "18\"",
+        "color": "#64748b",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-wheel-20",
+      "source": "wheel-choice",
+      "sourceHandle": "bottom",
+      "target": "wheel-20",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "label": "20\"",
+        "color": "#64748b",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-18-end",
+      "source": "wheel-18",
+      "sourceHandle": "bottom",
+      "target": "end",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    },
+    {
+      "id": "e-20-end",
+      "source": "wheel-20",
+      "sourceHandle": "bottom",
+      "target": "end",
+      "targetHandle": "top",
+      "type": "processEdge",
+      "data": {
+        "color": "#94a3b8",
+        "lineStyle": "solid",
+        "arrow": "arrow",
+        "branchStyle": "default"
+      }
+    }
+  ]
+}

@@ -1,5 +1,17 @@
 # Plugin System Documentation
 
+> **🤖 For AI Assistants**: This is the **PRIMARY REFERENCE** for building plugins/extensions.
+> 
+> **Critical Rules:**
+> - All plugins **MUST** be placed in the `plugins/` directory as `.tsx` files
+> - **DO NOT modify any files outside `plugins/` directory** - this includes `src/`, config files, or any core application code
+> - Multi-file plugins should be in their own subdirectory: `plugins/my-plugin/`
+> - The system uses **hooks** - this is the ONLY way to extend functionality
+> - Plugins are **auto-discovered** - no manual registration needed
+> - See [Quick Start](#quick-start) section below to get started immediately
+
+---
+
 This document explains how to create plugins/extensions for the Process Flowchart application. The plugin system follows a WordPress-style hook architecture that allows you to extend functionality without modifying core code.
 
 ## Overview
@@ -418,14 +430,49 @@ See `priority-extension.ts` for a complete working example that:
 - Adds a filter button to the view mode header
 - Demonstrates state management and complex UI interactions
 
-## Registering Your Plugin
+## Organizing Your Plugin
+
+### Single-File Plugins
+
+For simple plugins, create a single `.tsx` file:
+
+```
+plugins/
+  └── my-simple-plugin.tsx
+```
+
+### Multi-File Plugins
+
+For complex plugins that need multiple files, services, or APIs, create a subdirectory:
+
+```
+plugins/
+  └── my-complex-plugin/
+      ├── index.tsx              # Main entry point (exports Plugin object)
+      ├── components/            # Plugin-specific React components
+      │   ├── MyButton.tsx
+      │   └── MyModal.tsx
+      ├── services/              # External API integrations
+      │   └── api-client.ts
+      ├── utils/                 # Helper functions
+      │   └── formatters.ts
+      └── types.ts               # TypeScript type definitions
+```
+
+**Important**: 
+- The entry point must export a default `Plugin` object
+- ALL plugin code must stay within the `plugins/` directory
+- Do NOT create files outside of `plugins/` directory
+- Do NOT modify core application files
+
+### Registering Your Plugin
 
 **Automatic Discovery**: The plugin system automatically discovers and loads all `.tsx` files in the `plugins/` directory (excluding the `examples/` subdirectory). No manual registration is required!
 
-After creating your plugin file:
+After creating your plugin:
 
-1. **Place it in the `plugins/` directory** (or any subdirectory except `examples/`)
-2. **Ensure it has a `.tsx` extension** (required for auto-discovery)
+1. **Single-file**: Place `.tsx` file directly in `plugins/` directory
+2. **Multi-file**: Create subdirectory with entry point (e.g., `index.tsx`)
 3. **Restart your dev server** (or wait for hot reload)
 
 The plugin will automatically be discovered and loaded when the application starts. You'll see a console message: `"Loading plugin: [Your Plugin Name]"`
@@ -454,7 +501,20 @@ console.log(getRegisteredHooksInfo())
 
 ## For AI: Instructions to Build a Plugin
 
-**IMPORTANT FOR AI DEVELOPERS**: This plugin system works with **data and UI injection only**. You cannot customize the visual rendering of nodes/edges through plugins. If a user requests visual customization (e.g., changing node shapes, adding custom graphics), explain that this requires modifying core components (`ProcessNode.tsx`, `ProcessEdge.tsx`) and is outside the plugin system's scope.
+**CRITICAL RULES FOR AI DEVELOPERS**:
+
+1. **DO NOT modify files outside `plugins/` directory** - This is a hard rule. Never edit:
+   - Files in `src/` directory
+   - Core components (`ProcessNode.tsx`, `ProcessEdge.tsx`, `FlowWorkspace.tsx`)
+   - Configuration files (`vite.config.ts`, `package.json`, etc.)
+   - Any file outside the `plugins/` directory
+
+2. **Self-Contained Plugins**: If a plugin needs multiple files:
+   - Create a subdirectory: `plugins/my-plugin/`
+   - Place ALL related files in that subdirectory
+   - Include components, services, APIs, utilities all within the plugin directory
+
+3. **Visual Rendering Limitations**: This plugin system works with **data and UI injection only**. You cannot customize the visual rendering of nodes/edges through plugins. If a user requests visual customization (e.g., changing node shapes, adding custom graphics), explain that this requires modifying core components and is outside the plugin system's scope.
 
 When building a plugin, follow these steps:
 

@@ -31,6 +31,24 @@ Unlike traditional SaaS tools, Processes runs entirely on your infrastructure wi
 - **Export & Import**: Share processes with teammates via JSON files
 - **Local Storage**: All data stored in simple JSON files on your filesystem
 - **No External Dependencies**: Runs completely offline and independently
+- **Plugin System**: Extensible architecture for adding custom features without modifying core code
+
+## Extensibility
+
+**Plugin System**: This application includes a WordPress-style hook system for building extensions without modifying core code.
+
+- 📁 **Location**: Place plugins in `plugins/` directory
+- 🔌 **Auto-Discovery**: `.tsx` files are automatically loaded on startup
+- 🎣 **Hook-Based**: Inject buttons, form fields, and custom functionality at specific points
+- 📚 **Documentation**: Complete guide in [`plugins/README.md`](plugins/README.md)
+
+**Quick Start**: To build a plugin, create a `.tsx` file in `plugins/` that exports a `Plugin` object with an `initialize` function. The system will automatically discover and load it on startup. See examples in `plugins/examples/`.
+
+**Available Hooks:**
+- `header:viewMode:buttons` / `header:editMode:buttons` - Add buttons to the header
+- `inspector:node:fields` / `inspector:edge:fields` - Add custom form fields to inspectors
+
+[Read the complete plugin development guide →](plugins/README.md)
 
 ## Client-Agnostic Design
 
@@ -176,17 +194,14 @@ You can customize:
 
 ## Documentation
 
-### Layout Rules for AI Agents
+### For AI Assistants and Developers
 
-When generating process flowcharts programmatically or with AI assistance, refer to [`docs/LAYOUT_RULES.md`](docs/LAYOUT_RULES.md) for comprehensive guidelines on:
+- **Plugin Development**: [`plugins/README.md`](plugins/README.md) - Complete guide to building extensions
+- **Architecture Overview**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - System design and extension points
+- **Layout Rules**: [`docs/LAYOUT_RULES.md`](docs/LAYOUT_RULES.md) - AI flowchart generation guidelines
+- **AI Guidelines**: [`.cursorrules`](.cursorrules) - Quick reference for AI assistants
 
-- Dynamic node spacing based on content length
-- Collision detection and overlap prevention
-- Edge routing to avoid node intersections
-- Positioning patterns for sequential, branching, and merging flows
-- Code examples and algorithms
-
-These rules ensure generated flowcharts are well-spaced, collision-free, and readable.
+These documents ensure AI-generated code follows project conventions and uses the plugin system correctly.
 
 ## License
 

@@ -1,0 +1,166 @@
+# AI Development Guidelines
+
+## Plugin/Extension Development
+
+When a user asks to "build an extension", "build a plugin", "add a feature", or similar:
+
+### Critical Rules (MUST FOLLOW)
+
+1. **Location**: All plugins MUST be placed in the `plugins/` directory
+   - Single-file plugins: `plugins/my-plugin.tsx`
+   - Multi-file plugins: `plugins/my-plugin/` (with `index.tsx` or named entry point)
+   
+2. **DO NOT modify files outside `plugins/`**: 
+   - ❌ DO NOT edit `src/` directory
+   - ❌ DO NOT edit core components (`ProcessNode.tsx`, `ProcessEdge.tsx`, etc.)
+   - ❌ DO NOT edit `vite.config.ts`, `package.json`, or other config files
+   - ✅ ONLY create/modify files within `plugins/` directory
+
+3. **Self-Contained**: If a plugin needs multiple files, services, or APIs:
+   - Create a subdirectory: `plugins/my-plugin/`
+   - Place ALL related files in that directory
+   - Example structure:
+     ```
+     plugins/my-plugin/
+       ├── index.tsx          # Main plugin file
+       ├── components/        # Plugin-specific components
+       ├── services/          # Plugin-specific services/APIs
+       ├── utils/             # Plugin-specific utilities
+       └── types.ts           # Plugin-specific types
+     ```
+
+4. **File type**: Plugin entry points must be `.tsx` files (auto-discovered on startup)
+
+5. **Hook System Only**: Use the hook system - this is the ONLY way to extend functionality
+
+6. **Documentation**: Read `plugins/README.md` for complete technical reference
+
+### Quick Plugin Template
+
+```typescript
+import { hooks } from '@/lib/hooks'
+import type { Plugin } from '@/lib/plugins'
+import type { HeaderButtonHookContext } from '@/lib/hook-types'
+
+function initialize() {
+  // Register hooks here
+  hooks.addAction<HeaderButtonHookContext>('header:viewMode:buttons', ({ doc }) => {
+    return (
+      <button className="icon-button" onClick={() => alert('Hello!')}>
+        My Button
+      </button>
+    )
+  })
+}
+
+const plugin: Plugin = {
+  name: 'My Plugin',
+  version: '1.0.0',
+  initialize
+}
+
+export default plugin
+```
+
+### Available Hooks
+
+- `header:viewMode:buttons` - Add buttons to header (view mode)
+- `header:editMode:buttons` - Add buttons to header (edit mode)  
+- `inspector:node:fields` - Add fields to node inspector
+- `inspector:edge:fields` - Add fields to edge inspector
+
+See `src/lib/hook-types.ts` for detailed hook definitions and context types.
+
+### Important: Capabilities and Limitations
+
+**What Plugins CAN Do:**
+- ✅ Add UI elements (buttons, form fields) via hooks
+- ✅ Modify data properties on nodes/edges
+- ✅ Add custom data fields to nodes/edges
+- ✅ Create subdirectories within `plugins/` for organization
+- ✅ Include helper files, services, APIs within their plugin directory
+- ✅ Use external npm packages (already in package.json)
+
+**What Plugins CANNOT Do:**
+- ❌ Modify files outside `plugins/` directory
+- ❌ Change node/edge visual appearance (shape, layout, graphics)
+- ❌ Modify React components (`ProcessNode.tsx`, `ProcessEdge.tsx`)
+- ❌ Add custom node types to ReactFlow
+- ❌ Modify core application files or configuration
+- ❌ Change Vite configuration or build process
+
+**If a user requests something that requires modifying core files:**
+- Explain that it requires core changes (outside plugin system)
+- Suggest they modify core files manually
+- Do NOT attempt to work around this limitation
+
+### Examples
+
+See `plugins/examples/` for reference implementations:
+- `example-button-plugin.tsx` - Simple header button
+- `example-inspector-plugin.tsx` - Simple inspector field
+- `github-ticket-flow-extension.tsx` - Complete real-world example
+
+## Project Architecture
+
+- **Framework**: React 18 + TypeScript + Vite
+- **Flowchart Engine**: ReactFlow
+- **Styling**: Tailwind CSS
+- **Data Storage**: File-based JSON in `data/` directory
+- **Plugin System**: Hook-based with auto-discovery from `plugins/**/*.tsx`
+
+## Key Files
+
+- `plugins/README.md` - Complete plugin development guide (PRIMARY REFERENCE)
+- `src/lib/hook-types.ts` - Hook type definitions and documentation
+- `src/lib/plugins.ts` - Plugin loader with auto-discovery
+- `src/lib/hooks.ts` - Hook registry implementation
+- `docs/LAYOUT_RULES.md` - AI flowchart generation guidelines
+- `docs/ARCHITECTURE.md` - System architecture overview
+
+## Development Workflow
+
+1. **Adding a simple plugin**: Create `.tsx` file in `plugins/`, it auto-loads
+   - Example: `plugins/my-plugin.tsx`
+
+2. **Adding a complex plugin**: Create subdirectory in `plugins/`
+   - Example: `plugins/my-plugin/index.tsx` (entry point)
+   - Include all related files in `plugins/my-plugin/` directory
+
+3. **Removing a plugin**: Delete the file/directory or rename to `.tsx.disabled`
+
+4. **Testing**: Restart dev server to reload plugins
+
+5. **Debugging**: Check browser console for plugin load messages
+
+### Multi-File Plugin Example
+
+```
+plugins/
+  └── github-integration/
+      ├── index.tsx              # Plugin entry point (exports Plugin object)
+      ├── components/
+      │   ├── GitHubButton.tsx   # UI components
+      │   └── IssueModal.tsx
+      ├── services/
+      │   └── github-api.ts      # API calls to GitHub
+      ├── utils/
+      │   └── markdown.ts        # Helper utilities
+      └── types.ts               # TypeScript types
+```
+
+**Key Point**: Everything needed for the plugin is self-contained within its directory. No files outside `plugins/` are modified.
+
+## Data Structure
+
+Processes are stored as JSON files in `data/`:
+- `data/categories.json` - Category and process listings
+- `data/processes/{categoryId}-{processId}.json` - Individual process files
+
+Each process file contains:
+- Metadata (title, description, IDs)
+- Nodes (with positions, titles, descriptions, colors, custom data)
+- Edges (with connections, labels, styling, custom data)
+
+Plugins can extend node/edge data objects with custom fields.
+

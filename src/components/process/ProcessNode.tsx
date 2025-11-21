@@ -1,7 +1,9 @@
 import { Handle, Position, type NodeProps } from 'reactflow'
 import type { ProcessNodeData } from '@/types'
+import { hooks } from '@/lib/hooks'
+import type { NodeRenderHookContext } from '@/lib/hook-types'
 
-const ProcessNode = ({ data, selected }: NodeProps<ProcessNodeData>) => {
+const ProcessNode = ({ id, data, selected }: NodeProps<ProcessNodeData>) => {
   // Default to blue if no color specified
   const color = data.color || '#3b82f6'
   
@@ -60,6 +62,20 @@ const ProcessNode = ({ data, selected }: NodeProps<ProcessNodeData>) => {
         <p className="process-node__description">
           {data.description || 'Add a short description so collaborators understand this step.'}
         </p>
+        {/* Plugin hook: render additional content below description */}
+        {hooks.doAction<NodeRenderHookContext>('node:render:content', {
+          id,
+          data,
+          selected
+        })}
+      </div>
+      {/* Plugin hook: render badges at top-right corner */}
+      <div className="process-node__badges">
+        {hooks.doAction<NodeRenderHookContext>('node:render:badge', {
+          id,
+          data,
+          selected
+        })}
       </div>
     </div>
   )

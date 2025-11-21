@@ -9,6 +9,8 @@ import type { ReactNode } from 'react'
 import type {
   HeaderButtonHookContext,
   InspectorFieldHookContext,
+  NodeRenderHookContext,
+  EdgeRenderHookContext,
   HookCallback,
   HookRegistry
 } from './hook-types'

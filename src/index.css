@@ -39,6 +39,7 @@ body {
   justify-content: space-between;
   flex-direction: column;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .process-node--selected {
@@ -86,6 +87,66 @@ body {
   flex: 1;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.process-node__badges {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 60%;
+  pointer-events: none;
+}
+
+/* Plugin content styles - for content injected via node:render:content hook */
+.node-plugin-content {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+
+.node-plugin-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.25rem 0;
+  background: none;
+  border: none;
+  color: rgba(248, 250, 252, 0.85);
+  cursor: pointer;
+  transition: color 0.15s ease;
+  text-align: left;
+  font-size: 0.75rem;
+}
+
+.node-plugin-accordion-header:hover {
+  color: rgba(248, 250, 252, 1);
+}
+
+.node-plugin-list {
+  margin-top: 0.5rem;
+  padding-left: 0.75rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.node-plugin-list-item {
+  padding: 0.25rem 0.5rem;
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 0.25rem;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  border-left: 2px solid rgba(59, 130, 246, 0.4);
 }
 
 .control-chip {

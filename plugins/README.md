@@ -50,36 +50,45 @@ This application uses [ReactFlow](https://reactflow.dev/) as its underlying flow
 
 - ✅ Add buttons to the header (view mode or edit mode)
 - ✅ Add form fields to the inspector panels (for nodes or edges)
+- ✅ Add custom content directly on flowchart nodes (below description)
+- ✅ Add badges/indicators to nodes (top-right corner) and edges
 - ✅ Modify node/edge data properties (title, description, color, custom fields, etc.)
 - ✅ Access and read the entire process document
 - ✅ Perform actions based on document state
 - ✅ Store custom data in node/edge data objects
+- ✅ Display visual information on the flowchart based on custom data
 
 ### What Plugins CANNOT Do
 
-- ❌ Customize the visual rendering of nodes/edges (e.g., change node shape, add custom graphics)
-- ❌ Modify the React components that render nodes/edges (`ProcessNode.tsx`, `ProcessEdge.tsx`)
+- ❌ Change the fundamental structure of nodes/edges (e.g., node shape, edge path calculation)
+- ❌ Directly modify the core React components (`ProcessNode.tsx`, `ProcessEdge.tsx`)
 - ❌ Add new node or edge types to ReactFlow
 - ❌ Change ReactFlow configuration (connection rules, snap-to-grid, etc.)
 - ❌ Modify the canvas background or ReactFlow behavior
 
-### Visual Customization Limitations
+### Visual Customization Through Plugins
 
-If you need to customize how nodes or edges look visually (beyond changing data properties like color, title, etc.), you must:
+Plugins can now add visual content directly to the flowchart using rendering hooks:
 
-1. **Modify the core components directly**:
-   - Edit `src/components/process/ProcessNode.tsx` for node visual changes
-   - Edit `src/components/process/ProcessEdge.tsx` for edge visual changes
-   - This is **not** achievable through the plugin system
+1. **Content you CAN add through plugins**:
+   - ✅ Custom content below node descriptions (`node:render:content`)
+   - ✅ Badges/indicators on nodes (`node:render:badge`)
+   - ✅ Badges/indicators on edges (`edge:render:badge`)
+   - ✅ Modify data properties (color, title, description, etc.)
 
-2. **Understand the data-to-visual mapping**:
+2. **Structural changes that still require core modifications**:
+   - ❌ Change node shape or layout structure
+   - ❌ Modify edge path calculations
+   - ❌ Change connection handle positions
+   - ❌ Alter the fundamental component architecture
+
+3. **Data-to-visual mapping** (automatic):
    - Node color → affects background and border colors (see `ProcessNode.tsx`)
    - Edge color → affects stroke color (see `ProcessEdge.tsx`)
    - Edge lineStyle → affects dash pattern (solid/dashed/dotted)
    - Edge branchStyle → affects label badge styling
-   - These are the only visual aspects that can be controlled via data
 
-**For AI Developers**: When building plugins, focus on data manipulation and UI injection (buttons, form fields). Do not attempt to customize visual rendering through plugins - this requires modifying core components outside the plugin system.
+**For AI Developers**: Plugins can now inject visual content into nodes and edges using the rendering hooks (`node:render:content`, `node:render:badge`, `edge:render:badge`). Use these hooks to display information based on custom data fields. Only modify core components if you need to change structural aspects of the rendering.
 
 ## Plugin Structure
 
@@ -273,6 +282,129 @@ hooks.addAction<InspectorFieldHookContext>('inspector:edge:fields', ({ edge, onU
 
 ---
 
+### 5. `node:render:content`
+
+**Purpose**: Add custom content below the description directly on flowchart nodes.
+
+**Context provided**:
+```typescript
+{
+  id: string  // The node ID
+  data: ProcessNodeData  // The node data (title, description, color, custom fields)
+  selected: boolean  // Whether the node is currently selected
+}
+```
+
+**Return type**: `ReactNode` (typically text, badges, or small UI elements)
+
+**Example**:
+```typescript
+hooks.addAction<NodeRenderHookContext>('node:render:content', ({ id, data, selected }) => {
+  const teamMembers = (data as any).teamMembers || []
+  if (teamMembers.length === 0) return null
+  
+  return (
+    <div className="text-xs mt-2 text-slate-600">
+      👥 {teamMembers.length} team members
+    </div>
+  )
+})
+```
+
+**When it runs**: Every time a node is rendered on the flowchart
+
+**Styling notes**:
+- Keep content minimal and appropriately sized for nodes
+- Use small font sizes (`text-xs`, `text-sm`)
+- Consider the node's limited space
+- Test with both light and dark node colors
+- Content appears inside the node body, below the description
+
+---
+
+### 6. `node:render:badge`
+
+**Purpose**: Add badges or indicators to the top-right corner of flowchart nodes.
+
+**Context provided**:
+```typescript
+{
+  id: string  // The node ID
+  data: ProcessNodeData  // The node data (title, description, color, custom fields)
+  selected: boolean  // Whether the node is currently selected
+}
+```
+
+**Return type**: `ReactNode` (typically small badges or icons)
+
+**Example**:
+```typescript
+hooks.addAction<NodeRenderHookContext>('node:render:badge', ({ id, data, selected }) => {
+  const priority = (data as any).priority
+  if (!priority || priority === 'Low') return null
+  
+  const badgeColor = priority === 'High' ? 'bg-red-500' : 'bg-yellow-500'
+  
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded text-white ${badgeColor}`}>
+      {priority}
+    </span>
+  )
+})
+```
+
+**When it runs**: Every time a node is rendered on the flowchart
+
+**Styling notes**:
+- Keep badges small and unobtrusive
+- Position is absolute at top-right corner
+- Multiple badges will wrap if needed
+- Use high-contrast colors for visibility
+- Badges have `pointer-events: none` by default
+
+---
+
+### 7. `edge:render:badge`
+
+**Purpose**: Add badges or indicators to flowchart edges, appearing near the edge label.
+
+**Context provided**:
+```typescript
+{
+  id: string  // The edge ID
+  data?: ProcessEdgeData  // The edge data (label, color, lineStyle, custom fields)
+  source: string  // Source node ID
+  target: string  // Target node ID
+}
+```
+
+**Return type**: `ReactNode` (typically small badges or icons)
+
+**Example**:
+```typescript
+hooks.addAction<EdgeRenderHookContext>('edge:render:badge', ({ id, data, source, target }) => {
+  const validated = (data as any)?.validated
+  if (!validated) return null
+  
+  return (
+    <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded">
+      ✓ Validated
+    </span>
+  )
+})
+```
+
+**When it runs**: Every time an edge is rendered on the flowchart
+
+**Styling notes**:
+- Keep badges minimal to avoid cluttering
+- Badges appear below the edge label (or at midpoint if no label)
+- Use small, readable text
+- Consider background colors for contrast
+- Multiple badges are displayed with spacing
+
+---
+
 ## Type Definitions
 
 All types are exported from `@/lib/hook-types`:
@@ -281,6 +413,8 @@ All types are exported from `@/lib/hook-types`:
 import type {
   HeaderButtonHookContext,
   InspectorFieldHookContext,
+  NodeRenderHookContext,
+  EdgeRenderHookContext,
   HookName
 } from '@/lib/hook-types'
 ```

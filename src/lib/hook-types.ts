@@ -72,6 +72,39 @@ export interface InspectorFieldHookContext {
 }
 
 /**
+ * Context object passed to node rendering hooks.
+ * 
+ * @hook node:render:content - Add content below the description in nodes
+ * @hook node:render:badge - Add badges/indicators to the top-right of nodes
+ * 
+ * @property id - The node ID
+ * @property data - The node data (title, description, color, custom fields)
+ * @property selected - Whether the node is currently selected
+ */
+export interface NodeRenderHookContext {
+  id: string
+  data: ProcessNode['data']
+  selected: boolean
+}
+
+/**
+ * Context object passed to edge rendering hooks.
+ * 
+ * @hook edge:render:badge - Add badges/indicators to edges
+ * 
+ * @property id - The edge ID
+ * @property data - The edge data (label, color, lineStyle, etc.)
+ * @property source - The source node ID
+ * @property target - The target node ID
+ */
+export interface EdgeRenderHookContext {
+  id: string
+  data?: ProcessEdge['data']
+  source: string
+  target: string
+}
+
+/**
  * Hook metadata - describes all available hooks for AI/developer discovery.
  */
 export const HOOK_DEFINITIONS = {
@@ -229,6 +262,134 @@ export const HOOK_DEFINITIONS = {
     },
     returnType: 'ReactNode - typically form fields',
     location: 'FlowWorkspace.tsx InspectorPanel, edge section'
+  },
+
+  /**
+   * Hook: node:render:content
+   * 
+   * Purpose: Add custom content below the description inside flowchart nodes.
+   * This allows plugins to display additional information directly on the node.
+   * 
+   * Context provided:
+   * - id: string (the node ID)
+   * - data: ProcessNodeData (the node data including title, description, color, custom fields)
+   * - selected: boolean (whether the node is currently selected)
+   * 
+   * Expected return: ReactNode (typically text, badges, or small UI elements)
+   * 
+   * Example:
+   * ```typescript
+   * hooks.addAction('node:render:content', ({ id, data, selected }) => {
+   *   const teamMembers = (data as any).teamMembers || []
+   *   if (teamMembers.length === 0) return null
+   *   
+   *   return (
+   *     <div className="text-xs mt-2 text-slate-600">
+   *       👥 {teamMembers.length} team members
+   *     </div>
+   *   )
+   * })
+   * ```
+   * 
+   * Location: ProcessNode.tsx component, inside node body
+   * 
+   * Note: Keep content minimal and styled appropriately for small node sizes.
+   */
+  'node:render:content': {
+    description: 'Add content below description in flowchart nodes',
+    context: {
+      id: 'string - the node ID',
+      data: 'ProcessNodeData - node data (title, description, color, custom fields)',
+      selected: 'boolean - whether the node is currently selected'
+    },
+    returnType: 'ReactNode - typically text, badges, or small UI elements',
+    location: 'ProcessNode.tsx, inside node body after description'
+  },
+
+  /**
+   * Hook: node:render:badge
+   * 
+   * Purpose: Add badges or indicators to the top-right corner of flowchart nodes.
+   * Useful for status indicators, counts, icons, or other visual metadata.
+   * 
+   * Context provided:
+   * - id: string (the node ID)
+   * - data: ProcessNodeData (the node data including title, description, color, custom fields)
+   * - selected: boolean (whether the node is currently selected)
+   * 
+   * Expected return: ReactNode (typically small badges or icons)
+   * 
+   * Example:
+   * ```typescript
+   * hooks.addAction('node:render:badge', ({ id, data, selected }) => {
+   *   const priority = (data as any).priority
+   *   if (!priority || priority === 'Low') return null
+   *   
+   *   return (
+   *     <span className={`badge ${priority === 'High' ? 'badge-danger' : 'badge-warning'}`}>
+   *       {priority}
+   *     </span>
+   *   )
+   * })
+   * ```
+   * 
+   * Location: ProcessNode.tsx component, positioned at top-right
+   * 
+   * Note: Keep badges small and unobtrusive.
+   */
+  'node:render:badge': {
+    description: 'Add badges/indicators to top-right of flowchart nodes',
+    context: {
+      id: 'string - the node ID',
+      data: 'ProcessNodeData - node data (title, description, color, custom fields)',
+      selected: 'boolean - whether the node is currently selected'
+    },
+    returnType: 'ReactNode - typically small badges or icons',
+    location: 'ProcessNode.tsx, positioned at top-right corner'
+  },
+
+  /**
+   * Hook: edge:render:badge
+   * 
+   * Purpose: Add badges or indicators to flowchart edges.
+   * Appears near the edge label (or at midpoint if no label).
+   * 
+   * Context provided:
+   * - id: string (the edge ID)
+   * - data: ProcessEdgeData (edge data including label, color, lineStyle, etc.)
+   * - source: string (source node ID)
+   * - target: string (target node ID)
+   * 
+   * Expected return: ReactNode (typically small badges or icons)
+   * 
+   * Example:
+   * ```typescript
+   * hooks.addAction('edge:render:badge', ({ id, data, source, target }) => {
+   *   const validated = (data as any)?.validated
+   *   if (!validated) return null
+   *   
+   *   return (
+   *     <span className="text-xs bg-green-500 text-white px-1 rounded">
+   *       ✓
+   *     </span>
+   *   )
+   * })
+   * ```
+   * 
+   * Location: ProcessEdge.tsx component, near edge label
+   * 
+   * Note: Keep badges minimal to avoid cluttering the flowchart.
+   */
+  'edge:render:badge': {
+    description: 'Add badges/indicators to flowchart edges',
+    context: {
+      id: 'string - the edge ID',
+      data: 'ProcessEdgeData - edge data (label, color, lineStyle, custom fields)',
+      source: 'string - source node ID',
+      target: 'string - target node ID'
+    },
+    returnType: 'ReactNode - typically small badges or icons',
+    location: 'ProcessEdge.tsx, near edge label'
   }
 } as const
 

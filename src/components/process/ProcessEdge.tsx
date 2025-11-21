@@ -5,6 +5,8 @@ import {
 } from 'reactflow'
 import type { EdgeProps } from 'reactflow'
 import type { ProcessEdgeData } from '@/types'
+import { hooks } from '@/lib/hooks'
+import type { EdgeRenderHookContext } from '@/lib/hook-types'
 
 const branchBadgeStyles: Record<
   ProcessEdgeData['branchStyle'],
@@ -17,7 +19,7 @@ const branchBadgeStyles: Record<
 }
 
 const ProcessEdge = (props: EdgeProps<ProcessEdgeData>) => {
-  const { id, data, markerEnd, markerStart } = props
+  const { id, source, target, data, markerEnd, markerStart } = props
   const [edgePath, labelX, labelY] = getBezierPath(props)
 
   const color = data?.color ?? '#94a3b8'
@@ -47,8 +49,8 @@ const ProcessEdge = (props: EdgeProps<ProcessEdgeData>) => {
           ...animatedStyle
         }}
       />
-      {data?.label && (
-        <EdgeLabelRenderer>
+      <EdgeLabelRenderer>
+        {data?.label && (
           <div
             style={{
               position: 'absolute',
@@ -59,8 +61,25 @@ const ProcessEdge = (props: EdgeProps<ProcessEdgeData>) => {
           >
             {data.label}
           </div>
-        </EdgeLabelRenderer>
-      )}
+        )}
+        {/* Plugin hook: render badges on edges */}
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + (data?.label ? 25 : 0)}px)`,
+            pointerEvents: 'none',
+            display: 'flex',
+            gap: '0.25rem'
+          }}
+        >
+          {hooks.doAction<EdgeRenderHookContext>('edge:render:badge', {
+            id,
+            data,
+            source,
+            target
+          })}
+        </div>
+      </EdgeLabelRenderer>
     </>
   )
 }

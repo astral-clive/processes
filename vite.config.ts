@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { defineConfig } from 'vite'
+import { enforceLayoutRules } from './src/lib/layout-rules-server'
 
 const dataDir = path.resolve(__dirname, 'data')
 const categoriesFile = path.join(dataDir, 'categories.json')
@@ -220,7 +221,10 @@ export default defineConfig({
                 body.processId,
                 body.processName ?? ''
               )
+
               const filePath = getProcessPath(body.categoryId, body.processId)
+              // For newly-created processes we assume a human will edit the layout,
+              // so we do NOT enforce layout rules here.
               writeJson(filePath, doc)
               ensureDir(originalsDir)
               fs.copyFileSync(filePath, getOriginalPath(body.categoryId, body.processId))
@@ -267,8 +271,24 @@ export default defineConfig({
                 if ('meta' in body && typeof body.meta === 'object' && body.meta) {
                   ;(body.meta as Record<string, unknown>).updatedAt = new Date().toISOString()
                 }
-                writeJson(processPath, body)
-                return sendJson(res, 200, body)
+
+                // Optional layout enforcement:
+                // If the caller (e.g. an AI) sets `meta.autoLayout === true`,
+                // we run the strict layout rules before persisting.
+                const shouldEnforceLayout =
+                  typeof body === 'object' &&
+                  body !== null &&
+                  'meta' in body &&
+                  typeof body.meta === 'object' &&
+                  body.meta !== null &&
+                  (body.meta as any).autoLayout === true
+
+                const finalDoc = shouldEnforceLayout
+                  ? enforceLayoutRules(body as any)
+                  : body
+
+                writeJson(processPath, finalDoc)
+                return sendJson(res, 200, finalDoc)
               }
 
               if (method === 'DELETE' && parts.length === 4) {
@@ -293,7 +313,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      '@/plugins': path.resolve(__dirname, 'plugins')
     }
   }
 })

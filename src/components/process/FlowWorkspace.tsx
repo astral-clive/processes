@@ -26,8 +26,13 @@ import {
   Maximize2,
   Loader2,
   Check,
-  Upload
+  Upload,
+  Image,
+  FileText,
+  Clipboard
 } from 'lucide-react'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
 import type {
   BranchStyle,
@@ -41,6 +46,8 @@ import type {
 
 import ProcessEdgeComponent from './ProcessEdge'
 import ProcessNodeComponent from './ProcessNode'
+import { hooks } from '@/lib/hooks'
+import type { HeaderButtonHookContext, InspectorFieldHookContext } from '@/lib/hook-types'
 
 // Define node and edge types outside component to prevent recreation
 const nodeTypes = {
@@ -105,7 +112,15 @@ const FlowWorkspace = ({
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showSavedToast, setShowSavedToast] = useState(false)
+  const [exportingPNG, setExportingPNG] = useState(false)
+  const [exportingPDF, setExportingPDF] = useState(false)
+  const [exportingClipboard, setExportingClipboard] = useState(false)
+  const [pngDropdownOpen, setPngDropdownOpen] = useState(false)
+  const [pdfDropdownOpen, setPdfDropdownOpen] = useState(false)
+  const [clipboardDropdownOpen, setClipboardDropdownOpen] = useState(false)
+  const [showCopiedToast, setShowCopiedToast] = useState(false)
   const { project, fitView } = useReactFlow()
+  const reactFlowRef = useRef<HTMLDivElement>(null)
   
   // Open inspector when entering edit mode
   useEffect(() => {
@@ -379,6 +394,191 @@ const FlowWorkspace = ({
     URL.revokeObjectURL(url)
   }, [doc])
 
+  const handleExportPNG = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingPNG(true)
+    setPngDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+      
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${doc.meta.categoryId}-${doc.meta.processId}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+    } catch (error) {
+      console.error('Error exporting PNG:', error)
+    } finally {
+      setExportingPNG(false)
+    }
+  }, [doc.meta.categoryId, doc.meta.processId, fitView])
+
+  const handleExportPDF = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingPDF(true)
+    setPdfDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      })
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+      pdf.save(`${doc.meta.categoryId}-${doc.meta.processId}.pdf`)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setExportingPDF(false)
+    }
+  }, [doc.meta.categoryId, doc.meta.processId, fitView])
+
+  const handleExportClipboard = useCallback(async (exportEntire: boolean) => {
+    if (!reactFlowRef.current) return
+    
+    setExportingClipboard(true)
+    setClipboardDropdownOpen(false)
+    
+    try {
+      // Get the ReactFlow viewport element
+      const reactFlowElement = reactFlowRef.current.querySelector('.react-flow') as HTMLElement
+      if (!reactFlowElement) {
+        console.error('ReactFlow element not found')
+        return
+      }
+
+      if (exportEntire) {
+        // Fit entire flowchart to view
+        fitView({ padding: 0.4, maxZoom: 0.8, duration: 300 })
+        // Wait for animation to complete
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+
+      // Capture the viewport
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#0f172a', // slate-950
+        scale: 2, // Higher quality
+        logging: false,
+        useCORS: true
+      })
+
+      // Convert canvas to blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error('Failed to create blob')
+          setExportingClipboard(false)
+          return
+        }
+
+        try {
+          // Copy to clipboard using Clipboard API
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/png': blob
+            })
+          ])
+          
+          // Show toast notification
+          setShowCopiedToast(true)
+          setTimeout(() => {
+            setShowCopiedToast(false)
+          }, 2000)
+        } catch (error) {
+          console.error('Error copying to clipboard:', error)
+          // Fallback: try copying as data URL
+          try {
+            const dataUrl = canvas.toDataURL('image/png')
+            await navigator.clipboard.writeText(dataUrl)
+            setShowCopiedToast(true)
+            setTimeout(() => {
+              setShowCopiedToast(false)
+            }, 2000)
+          } catch (fallbackError) {
+            console.error('Fallback clipboard copy also failed:', fallbackError)
+          }
+        } finally {
+          setExportingClipboard(false)
+        }
+      }, 'image/png')
+    } catch (error) {
+      console.error('Error exporting to clipboard:', error)
+      setExportingClipboard(false)
+    }
+  }, [fitView])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pngDropdownOpen || pdfDropdownOpen || clipboardDropdownOpen) {
+        const target = event.target as HTMLElement
+        if (!target.closest('.export-button-container')) {
+          setPngDropdownOpen(false)
+          setPdfDropdownOpen(false)
+          setClipboardDropdownOpen(false)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [pngDropdownOpen, pdfDropdownOpen, clipboardDropdownOpen])
+
   return (
     <div className="flex h-full">
       <div className="flex-1 relative bg-slate-950">
@@ -405,16 +605,147 @@ const FlowWorkspace = ({
             </h2>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {!editMode && (
+              <>
+                {/* PNG Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPngDropdownOpen((prev) => !prev)
+                      setPdfDropdownOpen(false)
+                    }}
+                    disabled={exportingPNG}
+                    className="icon-button"
+                    title="Export as PNG"
+                  >
+                    {exportingPNG ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Image size={18} />
+                    )}
+                  </button>
+                  {pngDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportPNG(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Export visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportPNG(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Export entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* PDF Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdfDropdownOpen((prev) => !prev)
+                      setPngDropdownOpen(false)
+                      setClipboardDropdownOpen(false)
+                    }}
+                    disabled={exportingPDF}
+                    className="icon-button"
+                    title="Export as PDF"
+                  >
+                    {exportingPDF ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <FileText size={18} />
+                    )}
+                  </button>
+                  {pdfDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportPDF(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Export visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportPDF(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Export entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Clipboard Export Button */}
+                <div className="relative export-button-container">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClipboardDropdownOpen((prev) => !prev)
+                      setPngDropdownOpen(false)
+                      setPdfDropdownOpen(false)
+                    }}
+                    disabled={exportingClipboard}
+                    className="icon-button"
+                    title="Copy to clipboard"
+                  >
+                    {exportingClipboard ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Clipboard size={18} />
+                    )}
+                  </button>
+                  {clipboardDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 bg-ink-900 border border-white/10 rounded-lg shadow-lg z-50 min-w-[200px]">
+                      <button
+                        type="button"
+                        onClick={() => handleExportClipboard(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors"
+                      >
+                        Copy visible area
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportClipboard(true)}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                      >
+                        Copy entire flowchart
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Plugin buttons for view mode */}
+                {hooks.doAction<HeaderButtonHookContext>('header:viewMode:buttons', {
+                  editMode: false,
+                  doc
+                })}
+              </>
+            )}
             {editMode && (
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={resetting}
-                className="icon-button"
-                title={resetting ? 'Resetting...' : 'Reset flow'}
-              >
-                <RotateCcw size={18} />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={resetting}
+                  className="icon-button"
+                  title={resetting ? 'Resetting...' : 'Reset flow'}
+                >
+                  <RotateCcw size={18} />
+                </button>
+                {/* Plugin buttons for edit mode */}
+                {hooks.doAction<HeaderButtonHookContext>('header:editMode:buttons', {
+                  editMode: true,
+                  doc
+                })}
+              </>
             )}
             <button
               type="button"
@@ -437,7 +768,7 @@ const FlowWorkspace = ({
           </div>
         </header>
 
-        <div className="relative h-[calc(100%-88px)]">
+        <div className="relative h-[calc(100%-88px)]" ref={reactFlowRef}>
           <ReactFlow
             key={`${doc.meta.categoryId}-${doc.meta.processId}`}
             nodes={nodes}
@@ -524,6 +855,14 @@ const FlowWorkspace = ({
           )}
         </div>
       )}
+
+      {/* Toast notification for clipboard copy */}
+      {showCopiedToast && (
+        <div className="fixed bottom-5 right-5 z-50 bg-blue-500/90 backdrop-blur-sm border border-blue-400/50 rounded-lg shadow-lg px-4 py-3 flex items-center gap-2 text-white animate-slide-up">
+          <Check size={18} />
+          <span className="font-medium">Copied</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -602,6 +941,12 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
             ))}
           </div>
         </div>
+        {/* Plugin fields for node inspector */}
+        {hooks.doAction<InspectorFieldHookContext>('inspector:node:fields', {
+          node,
+          onUpdateNode,
+          onUpdateEdge
+        })}
       </aside>
     )
   }
@@ -653,6 +998,13 @@ const InspectorPanel = ({ node, edge, onUpdateNode, onUpdateEdge }: InspectorPan
           />
           Dashed line
         </label>
+        {/* Plugin fields for edge inspector */}
+        {hooks.doAction<InspectorFieldHookContext>('inspector:edge:fields', {
+          node,
+          edge,
+          onUpdateNode,
+          onUpdateEdge
+        })}
       </aside>
     )
   }

@@ -35,6 +35,7 @@ How this works:
 
 ## Table of Contents
 
+- [Valid Properties](#valid-properties)
 - [Core Spacing Guidelines](#core-spacing-guidelines)
 - [Dynamic Height Calculation](#dynamic-height-calculation)
 - [Collision Detection](#collision-detection)
@@ -44,6 +45,78 @@ How this works:
 - [Visual Examples](#visual-examples)
 - [Code Examples](#code-examples)
 - [Reference Examples](#reference-examples)
+
+## Valid Properties
+
+**CRITICAL**: When generating flowcharts, you MUST use only these valid property values. The inspector UI only supports these specific options.
+
+### Node Colors
+
+Nodes MUST use one of these 8 predefined hex colors:
+
+| Color Name | Hex Value | Usage |
+|-----------|-----------|-------|
+| Blue (default) | `#3b82f6` | General purpose, default |
+| Pink | `#fca5a5` | Highlights, alternatives |
+| Purple | `#c4b5fd` | Special processes |
+| Green | `#86efac` | Success, completion |
+| Yellow | `#fde047` | Warnings, important |
+| Orange | `#fdba74` | Actions, activities |
+| Teal | `#5eead4` | Questions, decisions |
+| Lavender | `#e9d5ff` | Optional, secondary |
+
+**DO NOT** use custom hex colors. The inspector only supports these 8 colors.
+
+### Edge Properties
+
+Edges have these fixed properties:
+
+| Property | Valid Values | Default | Notes |
+|----------|--------------|---------|-------|
+| `color` | `#94a3b8` | `#94a3b8` | Fixed, not editable in UI |
+| `lineStyle` | `solid`, `dashed` | `solid` | UI only supports solid/dashed |
+| `arrow` | `none`, `arrow` | `arrow` | UI checkbox (arrow or none) |
+| `branchStyle` | `default`, `positive`, `caution`, `danger` | `default` | For styling branch labels |
+
+**DO NOT** use:
+- ❌ Custom edge colors (only `#94a3b8` is valid)
+- ❌ `dotted` lineStyle (not in UI)
+- ❌ `diamond` arrow (not in UI)
+
+### Example Valid Node
+
+```json
+{
+  "id": "node-1",
+  "type": "processNode",
+  "position": { "x": 100, "y": 100 },
+  "data": {
+    "title": "Process Step",
+    "description": "Description of the step",
+    "color": "#3b82f6"
+  }
+}
+```
+
+### Example Valid Edge
+
+```json
+{
+  "id": "edge-1",
+  "source": "node-1",
+  "sourceHandle": "bottom",
+  "target": "node-2",
+  "targetHandle": "top",
+  "type": "processEdge",
+  "data": {
+    "label": "Next",
+    "color": "#94a3b8",
+    "lineStyle": "solid",
+    "arrow": "arrow",
+    "branchStyle": "default"
+  }
+}
+```
 
 ## Core Spacing Guidelines
 
@@ -754,6 +827,10 @@ See `data/processes/alpha-onboarding-to-team.json` for a real-world example of p
 
 ### Checklist Before Finalizing Layout
 
+- [ ] **Node colors use ONLY the 8 valid hex values** (see Valid Properties section)
+- [ ] **Edge color is `#94a3b8`** (don't use custom colors)
+- [ ] **Edge lineStyle is `solid` or `dashed`** (not dotted)
+- [ ] **Edge arrow is `none` or `arrow`** (not diamond)
 - [ ] All node heights estimated or calculated
 - [ ] No node-to-node collisions (40px+ spacing between edges)
 - [ ] Sequential flows use dynamic spacing (previous height + gap)
@@ -770,13 +847,16 @@ See `data/processes/alpha-onboarding-to-team.json` for a real-world example of p
 
 When generating flowcharts:
 
-1. **Calculate node heights first** based on content length
-2. **Position nodes sequentially** using dynamic spacing: `nextY = previousY + previousHeight + gap`
-3. **Check for collisions** before finalizing each position
-4. **Branch horizontally** with 300px+ spacing, stagger vertically
-5. **Merge after lowest point** of all converging paths
-6. **Verify edge paths** don't intersect node bounding boxes
-7. **Use appropriate handles** for clean edge connections
+1. **Use ONLY valid property values** from the Valid Properties section above
+2. **Node colors must be one of the 8 predefined hex values** (no custom colors)
+3. **Edge properties must use valid values** (color: `#94a3b8`, lineStyle: `solid`/`dashed`, arrow: `none`/`arrow`)
+4. **Calculate node heights first** based on content length
+5. **Position nodes sequentially** using dynamic spacing: `nextY = previousY + previousHeight + gap`
+6. **Check for collisions** before finalizing each position
+7. **Branch horizontally** with 300px+ spacing, stagger vertically
+8. **Merge after lowest point** of all converging paths
+9. **Verify edge paths** don't intersect node bounding boxes
+10. **Use appropriate handles** for clean edge connections
 
-Following these rules ensures your generated flowcharts will be well-spaced, collision-free, and easy to read!
+Following these rules ensures your generated flowcharts will be well-spaced, collision-free, use valid properties, and be easy to read!
 

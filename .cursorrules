@@ -235,6 +235,50 @@ When creating or modifying flowchart process files, **ALWAYS follow these rules*
 - `docs/LAYOUT_RULES.md` - Comprehensive layout guidelines
 - `data/processes/alpha-onboarding-to-team.json` - Well-formed example
 
+### Valid Node and Edge Properties
+
+**CRITICAL**: When creating flowcharts, ONLY use these valid options from the inspector:
+
+**Node Colors** (MUST be one of these 8 hex values):
+- Blue: `#3b82f6` (default)
+- Pink: `#fca5a5`
+- Purple: `#c4b5fd`
+- Green: `#86efac`
+- Yellow: `#fde047`
+- Orange: `#fdba74`
+- Teal: `#5eead4`
+- Lavender: `#e9d5ff`
+
+**Edge Properties** (default values):
+- `color`: `#94a3b8` (fixed, not editable)
+- `lineStyle`: `solid` or `dashed` (UI only supports these two)
+- `arrow`: `none` or `arrow` (UI checkbox)
+- `branchStyle`: `default`, `positive`, `caution`, or `danger` (for styling branches)
+
+**Example Node:**
+```json
+{
+  "data": {
+    "title": "Node Title",
+    "description": "Node description",
+    "color": "#3b82f6"
+  }
+}
+```
+
+**Example Edge:**
+```json
+{
+  "data": {
+    "label": "Optional label",
+    "color": "#94a3b8",
+    "lineStyle": "solid",
+    "arrow": "arrow",
+    "branchStyle": "default"
+  }
+}
+```
+
 ### Quick Checklist
 
 When generating a flowchart:
@@ -243,4 +287,6 @@ When generating a flowchart:
 - [ ] Nodes have adequate spacing (70px+ vertical, 300px+ horizontal)
 - [ ] No node overlaps or collisions
 - [ ] Edge paths don't cross through unrelated nodes
+- [ ] Node colors are ONLY from the 8 valid options above
+- [ ] Edge properties use valid values (don't invent custom colors or styles)
 
